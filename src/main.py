@@ -27,8 +27,7 @@ from PyQt5.QtCore import QCommandLineOption, QCommandLineParser
 
 if __name__ == '__main__':
 
-    # NOTE: sys.argv or sys.argv[1:]?
-    app = QApplication(sys.argv[1:])
+    app = QApplication(sys.argv)
     app.setApplicationName(app_settings.appname)
     app.setApplicationVersion(app_settings.version)
     app.setApplicationDisplayName(app_settings.displayname)

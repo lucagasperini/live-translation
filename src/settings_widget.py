@@ -52,12 +52,12 @@ class settings_widget(QWidget):
         self.lang_src_label = QLabel(QApplication.translate(
             "i18n", "Source language:"))
         self.lang_src_cbox = QComboBox()
-        self.lang_src_cbox.addItems(get_lang_names())
+        self.lang_src_cbox.addItems(sorted(get_lang_names()))
 
         self.lang_trg_label = QLabel(QApplication.translate(
             "i18n", "Target language:"))
         self.lang_trg_cbox = CheckableComboBox()
-        self.lang_trg_cbox.addItems(get_lang_names())
+        self.lang_trg_cbox.addItems(sorted(get_lang_names()))
 
         self.test_btn = QPushButton()
         self.test_btn.setText(QApplication.translate(
