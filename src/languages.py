@@ -40,7 +40,6 @@ def script():
                 count += 1
 
     stream.close()
-    ciao = {'c': 10, 'd': 13}
 
     text = "{"
     for i in out:

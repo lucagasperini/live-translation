@@ -18,12 +18,16 @@
 from mainwindow import mainwindow
 from settings import app_settings
 from utils import print_log
+from http_handler import http_worker, stop_http_server
+import http_handler
+
 
 import sys
+import os
 import PyQt5
 from PyQt5 import QtGui, QtCore, Qt
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QCommandLineOption, QCommandLineParser
+from PyQt5.QtWidgets import QApplication, QDialogButtonBox, QMessageBox
+from PyQt5.QtCore import QDir, QCommandLineOption, QCommandLineParser
 
 if __name__ == '__main__':
 
@@ -72,11 +76,44 @@ if __name__ == '__main__':
 
     print_log("End settings parsing.")
 
+    lock_file_path = QDir.tempPath() + "/livetranslation.lock"
+
+    if os.path.exists(lock_file_path):
+        process_duplicate_result = QMessageBox.critical(None, QApplication.translate(
+            "i18n", "Duplicate process"), QApplication.translate("i18n",
+                                                                 "Close other session of this app, "
+                                                                 "if you are sure "
+                                                                 "there are not other "
+                                                                 "session running"
+                                                                 "in this computer, say YES."),
+            QMessageBox.Yes | QMessageBox.No)
+
+        if process_duplicate_result == QMessageBox.No:
+            sys.exit(0)
+        else:
+            print_log("Using old lock file.")
+    else:
+        lock_file = open(lock_file_path, "x")
+        lock_file.close()
+        print_log("Created lock file.")
+
     window = mainwindow()
     window.show()
 
     retcode = app.exec_()
 
+    if os.path.exists(lock_file_path):
+        os.remove(lock_file_path)
+        print_log("Deleted lock file.")
+    else:
+        print_log("Lock file not found.")
+
+    # NOTE: I dont like this way, to force close http server by global variable, but it works...
+    if http_handler.http_worker != None and http_handler.http_worker.is_alive():
+        stop_http_server()
+        print_log("Forced to terminate http server.")
+
+    print_log("Saving config file.")
     app_settings.write_file(config_file)
 
     print_log("Closing app. retcode: " + str(retcode))

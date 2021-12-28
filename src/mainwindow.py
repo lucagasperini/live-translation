@@ -19,24 +19,10 @@ from settings import app_settings
 from play_widget import play_widget
 from settings_widget import settings_widget
 from utils import print_log
+from http_handler import stop_http_server
 
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTabWidget)
-
-
-class MainWindowCentralWidget(QTabWidget):
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.Parent = parent
-
-        self.play_tab = play_widget()
-        self.settings_tab = settings_widget()
-
-        self.addTab(self.play_tab, "Tab")
-        self.setTabText(0, "Play")
-
-        self.addTab(self.settings_tab, "Settings")
-        self.setTabText(1, "Settings")
+from PyQt5 import QtCore
 
 
 class mainwindow(QMainWindow):
@@ -45,7 +31,7 @@ class mainwindow(QMainWindow):
         self.init_ui()
 
     # TODO: Can be wrong with multiple screens!
-    def init_winsize(self, w=320, h=640):
+    def init_winsize(self, w=540, h=960):
         x = (QApplication.desktop().width() / 2) - (w / 2)
         y = (QApplication.desktop().height() / 2) - (h / 2)
         self.setGeometry(int(x), int(y), int(w), int(h))
@@ -60,5 +46,15 @@ class mainwindow(QMainWindow):
 
         self.init_winsize()
 
-        self.CentralWidget = MainWindowCentralWidget(self)
-        self.setCentralWidget(self.CentralWidget)
+        self.tabman = QTabWidget(self)
+
+        self.play_tab = play_widget(self.tabman)
+        self.settings_tab = settings_widget(self.tabman)
+
+        self.tabman.addTab(self.play_tab, "Tab")
+        self.tabman.setTabText(0, "Play")
+
+        self.tabman.addTab(self.settings_tab, "Settings")
+        self.tabman.setTabText(1, "Settings")
+
+        self.setCentralWidget(self.tabman)

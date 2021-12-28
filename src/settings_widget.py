@@ -135,6 +135,8 @@ class settings_widget(QWidget):
         layout.addWidget(self.trans_appkey_label)
         layout.addWidget(self.trans_appkey_line)
 
+        self.setLayout(layout)
+
         self.recording_worker = recording()
 
         self.init_device_list()

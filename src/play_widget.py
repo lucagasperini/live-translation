@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
+from PyQt5 import QtCore
 from recording import recording
 from translator import translator
 from settings import app_settings
@@ -25,6 +26,7 @@ from utils import pcm2wav, want_terminate_thread
 import http_handler
 from http_handler import run_http_server, stop_http_server
 ####
+from PyQt5.QtCore import QEvent, pyqtSlot
 from PyQt5.QtWidgets import QVBoxLayout, QLabel, QWidget, QComboBox, QApplication, QPushButton, QTextEdit
 
 
@@ -37,7 +39,7 @@ class play_widget(QWidget):
     sentences = []
 
     def __init__(self, parent=None):
-        super().__init__(parent)
+        super(play_widget, self).__init__(parent)
 
         self.IndexWidgetCentralWidget = QWidget(self)
         self.MainLayout = layout = QVBoxLayout()
@@ -60,6 +62,8 @@ class play_widget(QWidget):
         layout.addWidget(self.play_btn)
         layout.addWidget(self.play_text)
         layout.addWidget(self.play_trans)
+
+        self.setLayout(layout)
 
         self.play_btn.clicked.connect(self.play_btn_clicked)
 
@@ -93,14 +97,13 @@ class play_widget(QWidget):
 
         self.play_btn.setText(
             QApplication.translate("i18n", "Stop recording"))
-        self.http_worker = run_http_server(
-            app_settings.http_port, app_settings.http_refresh)
+        run_http_server(app_settings.http_port, app_settings.http_refresh)
 
     def stop_recording(self):
         self.recording_worker.requestInterruption()
         self.recognizer_worker.requestInterruption()
         self.translator_worker.requestInterruption()
-        stop_http_server(self.http_worker)
+        stop_http_server()
         self.play_btn.setText(QApplication.translate(
             "i18n", "Start recording"))
 

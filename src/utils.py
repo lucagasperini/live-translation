@@ -24,7 +24,7 @@ import enum
 import os
 
 
-THREAD_TIMEOUT = 5000
+THREAD_TIMEOUT = 100
 
 
 # NOTE: No more used

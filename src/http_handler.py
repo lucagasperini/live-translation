@@ -22,12 +22,13 @@ import http.server
 from http import HTTPStatus
 
 http_handler_queue = Queue()
+http_worker = None
 
 
 def serve_forever(port, refresh, queue):
 
     class http_request_handler(http.server.SimpleHTTPRequestHandler):
-        protocol_version = "HTTP/1.0"
+        protocol_version = "HTTP/1.1"
         text = ""
 
         def do_GET(self):
@@ -47,9 +48,10 @@ def serve_forever(port, refresh, queue):
             encoded_page = bytes(html_page, "utf-8")
 
             self.send_response(HTTPStatus.OK)
-            self.send_header("Content-type", "text/html")
+            self.send_header("Content-type", "text/html; charset=utf-8")
             self.send_header("Content-length", len(encoded_page))
-            self.send_header("Refresh", refresh)
+            if refresh:
+                self.send_header("Refresh", refresh)
             self.end_headers()
 
             self.wfile.write(encoded_page)
@@ -64,14 +66,13 @@ def serve_forever(port, refresh, queue):
 def run_http_server(port, refresh):
 
     print_log("Starting process of http server at " + str(port))
-
-    thread = Process(
-        target=serve_forever, args=(port, refresh, http_handler_queue))
-    thread.start()
-
-    return thread
+    global http_worker
+    http_worker = Process(target=serve_forever, args=(
+        port, refresh, http_handler_queue))
+    http_worker.start()
 
 
-def stop_http_server(httpd):
+def stop_http_server():
     print_log("Closing process of http server")
-    httpd.terminate()
+    global http_worker
+    http_worker.terminate()
