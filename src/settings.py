@@ -43,6 +43,10 @@ class settings():
     lang_src = "zh"
     lang_trg = ["en"]
     sentence_limit = 2
+    win_x = -1
+    win_y = -1
+    win_w = 540
+    win_h = 960
 
     def open_file(self, config_file=""):
         # NOTE: Only if file exists? or we can allow to create new files?
@@ -76,6 +80,10 @@ class settings():
         self.lang_src = qsettings.value("lang_src", "zh")
         self.lang_trg = qsettings.value("lang_trg", "en").split(":")
         self.sentence_limit = int(qsettings.value("sentence_limit", 2))
+        self.win_x = int(qsettings.value("win_x", -1))
+        self.win_y = int(qsettings.value("win_y", -1))
+        self.win_w = int(qsettings.value("win_w", 540))
+        self.win_h = int(qsettings.value("win_h", 960))
 
     def write_file(self, config_file=""):
         qsettings = self.open_file(config_file)
@@ -98,6 +106,10 @@ class settings():
         qsettings.setValue("lang_src", self.lang_src)
         qsettings.setValue("lang_trg", ":".join(self.lang_trg))
         qsettings.setValue("sentence_limit", self.sentence_limit)
+        qsettings.setValue("win_x", self.win_x)
+        qsettings.setValue("win_y", self.win_y)
+        qsettings.setValue("win_w", self.win_w)
+        qsettings.setValue("win_h", self.win_h)
 
 
 app_settings = settings()

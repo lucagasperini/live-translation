@@ -30,10 +30,17 @@ class mainwindow(QMainWindow):
         super(mainwindow, self).__init__(parent)
         self.init_ui()
 
-    # TODO: Can be wrong with multiple screens!
-    def init_winsize(self, w=540, h=960):
-        x = (QApplication.desktop().width() / 2) - (w / 2)
-        y = (QApplication.desktop().height() / 2) - (h / 2)
+    def init_winsize(self, w, h):
+        if app_settings.win_x < 0:
+            x = (QApplication.desktop().width() / 2) - (w / 2)
+        else:
+            x = app_settings.win_x
+
+        if app_settings.win_y < 0:
+            y = (QApplication.desktop().height() / 2) - (h / 2)
+        else:
+            y = app_settings.win_y
+
         self.setGeometry(int(x), int(y), int(w), int(h))
         self.setFixedSize(int(w), int(h))
 
@@ -44,7 +51,7 @@ class mainwindow(QMainWindow):
         self.setWindowTitle('{} {}'.format(
             app_settings.displayname, app_settings.version))
 
-        self.init_winsize()
+        self.init_winsize(app_settings.win_w, app_settings.win_h)
 
         self.tabman = QTabWidget(self)
 
@@ -58,3 +65,9 @@ class mainwindow(QMainWindow):
         self.tabman.setTabText(1, "Settings")
 
         self.setCentralWidget(self.tabman)
+
+    def closeEvent(self, event) -> None:
+        app_settings.win_x = self.geometry().x()
+        app_settings.win_y = self.geometry().y()
+        event.accept()
+        return super().closeEvent(event)
