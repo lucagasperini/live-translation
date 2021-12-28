@@ -1,0 +1,97 @@
+# Copyright (C) 2021 Luca Gasperini <luca.gasperini@xsoftware.it>
+#
+# This file is part of Live Translation.
+#
+# Live Translation is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Live Translation is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
+
+from settings import app_settings
+from utils import log_code, print_log
+
+from aliyunsdkcore.client import AcsClient
+from aliyunsdkcore.acs_exception.exceptions import ClientException
+from aliyunsdkcore.acs_exception.exceptions import ServerException
+from aliyunsdkalimt.request.v20181012 import TranslateGeneralRequest
+
+from PyQt5.QtCore import QThread, pyqtSignal
+from queue import Queue
+
+import json
+
+
+class translator(QThread):
+    # result = pyqtSignal(str, str)
+    result = pyqtSignal(dict)
+    error = pyqtSignal(int)
+
+    q = None
+    client = None
+    lang_src = "zh"
+    lang_trg = ["en"]
+
+    def __init__(self, parent=None):
+        super(translator, self).__init__(parent)
+        self.q = Queue()  # NOTE: Should I make a max?
+
+    def init(self, lang_src, lang_trg):
+        self.lang_src = lang_src
+        self.lang_trg = lang_trg
+
+        print_log("Init translator for " +
+                  lang_src + " -> " + ":".join(lang_trg))
+
+        self.client = AcsClient(
+            app_settings.api_trans_akid,
+            app_settings.api_trans_aksecret,
+            app_settings.api_trans_appkey
+        )
+
+    def data_ready(self, data):
+        print_log("text to translate ready to send to worker")
+        self.q.put(data)
+
+    def run(self):
+
+        output = dict()
+        while not self.isInterruptionRequested():
+            text = self.q.get()
+
+            if not text:
+                continue
+
+            for i in range(0, len(self.lang_trg)):
+                print_log("Translating to " + self.lang_src +
+                          "->" + self.lang_trg[i] + " text: " + text)
+                request = TranslateGeneralRequest.TranslateGeneralRequest()
+                request.set_SourceText(text)
+                request.set_SourceLanguage(self.lang_src)
+                request.set_TargetLanguage(self.lang_trg[i])
+                request.set_FormatType("text")
+                request.set_method("POST")
+                response = self.client.do_action_with_exception(request)
+                result = json.loads(response)
+                if result["Code"] != "200":
+                    print_log("Translating text: " +
+                              text + " Code: " + result["Code"], log_code.ERROR)
+                    return ""
+
+                output[self.lang_trg[i]] = str(result["Data"]["Translated"])
+
+                print_log("Translated to " + self.lang_src +
+                          "->" + self.lang_trg[i] + " text: " + output[self.lang_trg[i]])
+
+                # self.result.emit(self.lang_trg[i], output[self.lang_trg[i]])
+            self.result.emit(output)
+
+    def delete():
+        pass  # NOTE: do something?
