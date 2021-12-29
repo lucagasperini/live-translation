@@ -32,14 +32,14 @@ NLS_STATUS_OK = 20000000
 
 class recognizer(QThread):
     result = pyqtSignal(str)
-    error = pyqtSignal(int)
+    error = pyqtSignal(str)
 
     api = None
 
     q = None
 
     def __init__(self, parent=None):
-        super(recognizer, self).__init__(parent)
+        super(__class__, self).__init__(parent)
         self.q = Queue()  # NOTE: Should I make a max?
 
     def init(self, akid="", aksecret="", appkey=""):
@@ -62,7 +62,8 @@ class recognizer(QThread):
         if msg["header"]["status"] == NLS_STATUS_OK:
             print_log("NlsSpeechRecognizer status ok", log_code.INFO)
         else:
-            print_log("NlsSpeechRecognizer status failed", log_code.ERROR)
+            print_log("NlsSpeechRecognizer status failed",
+                      log_code.ERROR, self.error)
             print_log("on_start:{}".format(message))
 
     def on_sentence_begin(self, message, *args):
@@ -77,7 +78,7 @@ class recognizer(QThread):
         self.result.emit(msg["payload"]["result"])
 
     def on_error(self, message, *args):
-        print_log("NlsSpeechRecognizer error", log_code.ERROR)
+        print_log("NlsSpeechRecognizer error", log_code.ERROR, self.error)
         print_log("on_error args=>{} message=>{}".format(
             args, message))
 
@@ -112,16 +113,13 @@ class recognizer(QThread):
             for i in slices:
                 if not self.api.send_audio(bytes(i)):
                     print_log("Sending audio data to recognizer",
-                              log_code.ERROR)
+                              log_code.ERROR, self.error)
                     self.requestInterruption()
 
-        r = self.api.stop()
-
-        print_log("Stoping recognition")
+        print_log("Stoping recognition",
+                  log_code.DEBUG if self.api.stop() else log_code.ERROR,
+                  self.error)
 
         print_log("Closing recognizer_worker")
 
         self.api.shutdown()
-
-    def delete():
-        pass  # NOTE: do something?

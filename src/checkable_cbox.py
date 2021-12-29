@@ -34,7 +34,7 @@ class CheckableComboBox(QComboBox):
             return size
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(__class__, self).__init__(*args, **kwargs)
 
         # Make the combo editable to set a custom text, but readonly
         self.setEditable(True)

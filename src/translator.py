@@ -32,7 +32,7 @@ import json
 class translator(QThread):
     # result = pyqtSignal(str, str)
     result = pyqtSignal(dict)
-    error = pyqtSignal(int)
+    error = pyqtSignal(str)
 
     q = None
     client = None
@@ -40,7 +40,7 @@ class translator(QThread):
     lang_trg = ["en"]
 
     def __init__(self, parent=None):
-        super(translator, self).__init__(parent)
+        super(__class__, self).__init__(parent)
         self.q = Queue()  # NOTE: Should I make a max?
 
     def init(self, lang_src, lang_trg):
@@ -82,7 +82,7 @@ class translator(QThread):
                 result = json.loads(response)
                 if result["Code"] != "200":
                     print_log("Translating text: " +
-                              text + " Code: " + result["Code"], log_code.ERROR)
+                              text + " Code: " + result["Code"], log_code.ERROR, self.error)
                     return ""
 
                 output[self.lang_trg[i]] = str(result["Data"]["Translated"])
@@ -92,6 +92,3 @@ class translator(QThread):
 
                 # self.result.emit(self.lang_trg[i], output[self.lang_trg[i]])
             self.result.emit(output)
-
-    def delete():
-        pass  # NOTE: do something?

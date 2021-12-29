@@ -19,15 +19,13 @@ from settings import app_settings
 from play_widget import play_widget
 from settings_widget import settings_widget
 from utils import print_log
-from http_handler import stop_http_server
 
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTabWidget)
-from PyQt5 import QtCore
 
 
 class mainwindow(QMainWindow):
     def __init__(self, parent=None):
-        super(mainwindow, self).__init__(parent)
+        super(__class__, self).__init__(parent)
         self.init_ui()
 
     def init_winsize(self, w, h):

@@ -28,7 +28,7 @@ SECRET_PASSWORD = "SECRET_PASSWORD"
 class settings_widget(QWidget):
 
     def __init__(self, parent=None):
-        super().__init__(parent)
+        super(__class__, self).__init__(parent)
 
         self.IndexWidgetCentralWidget = QWidget(self)
         self.MainLayout = layout = QVBoxLayout()
@@ -138,6 +138,8 @@ class settings_widget(QWidget):
         self.setLayout(layout)
 
         self.recording_worker = recording()
+
+        self.recording_worker.error.connect(self.recording_error)
 
         self.init_device_list()
 
@@ -268,3 +270,8 @@ class settings_widget(QWidget):
 
     def trans_appkey_line_changed(self, value):
         app_settings.api_trans_appkey = value
+
+    # TODO: Error management
+    def recording_error(self, err):
+        pass
+        # print(err)

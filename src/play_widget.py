@@ -15,31 +15,27 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt5 import QtCore
 from recording import recording
 from translator import translator
 from settings import app_settings
-from utils import log_code, print_log
-# TODO: Remove
 from recognizer import recognizer
-from utils import pcm2wav, want_terminate_thread
-import http_handler
-from http_handler import run_http_server, stop_http_server
-####
-from PyQt5.QtCore import QEvent, pyqtSlot
-from PyQt5.QtWidgets import QVBoxLayout, QLabel, QWidget, QComboBox, QApplication, QPushButton, QTextEdit
+from utils import want_terminate_thread
+from websocket import websocket
+
+import json
+from PyQt5.QtWidgets import QVBoxLayout, QWidget, QApplication, QPushButton, QTextEdit
 
 
 class play_widget(QWidget):
     recognizer_worker = None
     recording_worker = None
     translator_worker = None
-    http_worker = None
+    websocket_worker = None
 
     sentences = []
 
     def __init__(self, parent=None):
-        super(play_widget, self).__init__(parent)
+        super(__class__, self).__init__(parent)
 
         self.IndexWidgetCentralWidget = QWidget(self)
         self.MainLayout = layout = QVBoxLayout()
@@ -70,14 +66,21 @@ class play_widget(QWidget):
         self.recording_worker = recording()
 
         self.recording_worker.result.connect(self.audio_recording)
+        self.recording_worker.error.connect(self.recording_error)
 
         self.recognizer_worker = recognizer()
 
         self.recognizer_worker.result.connect(self.write_sentence)
+        self.recognizer_worker.error.connect(self.recognizer_error)
 
         self.translator_worker = translator()
 
         self.translator_worker.result.connect(self.write_sentence_translated)
+        self.translator_worker.error.connect(self.translator_error)
+
+        self.websocket_worker = websocket()
+
+        self.websocket_worker.error.connect(self.translator_error)
 
     def start_recording(self):
         self.recording_worker.init(playback=False,
@@ -95,15 +98,20 @@ class play_widget(QWidget):
             app_settings.lang_src, app_settings.lang_trg)
         self.translator_worker.start()
 
+        self.websocket_worker.init(
+            app_settings.http_port, app_settings.http_refresh)
+        if not self.websocket_worker.isRunning():
+            self.websocket_worker.start()
+
         self.play_btn.setText(
             QApplication.translate("i18n", "Stop recording"))
-        run_http_server(app_settings.http_port, app_settings.http_refresh)
 
     def stop_recording(self):
+
         self.recording_worker.requestInterruption()
         self.recognizer_worker.requestInterruption()
         self.translator_worker.requestInterruption()
-        stop_http_server()
+
         self.play_btn.setText(QApplication.translate(
             "i18n", "Start recording"))
 
@@ -129,5 +137,24 @@ class play_widget(QWidget):
             self.sentences.pop(0)
         self.sentences.append(dict(data))
 
-        self.play_trans.setText(str(self.sentences))
-        http_handler.http_handler_queue.put(self.sentences)
+        display_text = json.dumps(self.sentences)
+
+        self.play_trans.setText(display_text)
+        self.websocket_worker.data_ready(display_text)
+
+    # TODO: Error management
+    def recording_error(self, err):
+        pass
+        # print(err)
+
+    def recognizer_error(self, err):
+        pass
+        # print(err)
+
+    def translator_error(self, err):
+        pass
+        # print(err)
+
+    def websocket_error(self, err):
+        pass
+        # print(err)

@@ -18,8 +18,6 @@
 from mainwindow import mainwindow
 from settings import app_settings
 from utils import print_log
-from http_handler import http_worker, stop_http_server
-import http_handler
 
 
 import sys
@@ -107,11 +105,6 @@ if __name__ == '__main__':
         print_log("Deleted lock file.")
     else:
         print_log("Lock file not found.")
-
-    # NOTE: I dont like this way, to force close http server by global variable, but it works...
-    if http_handler.http_worker != None and http_handler.http_worker.is_alive():
-        stop_http_server()
-        print_log("Forced to terminate http server.")
 
     print_log("Saving config file.")
     app_settings.write_file(config_file)
