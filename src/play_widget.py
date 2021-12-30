@@ -30,6 +30,7 @@ from recording import recording
 from translator import translator
 from recognizer import recognizer
 from utils import want_terminate_thread
+from utils import show_critical_error
 from websocket import websocket
 
 
@@ -50,20 +51,20 @@ class play_widget(QWidget):
 
         self.play_btn = QPushButton()
         self.play_btn.setText(QApplication.translate(
-            "i18n", "Start recording"))
+            config.APP_I18N, "Start recording"))
 
         self.play_text = QTextEdit(self)
         self.play_text.setText(QApplication.translate(
-            "i18n", "Text sentence here!"))
+            config.APP_I18N, "Text sentence here!"))
         self.play_text.setReadOnly(True)
 
         self.play_trans = QTextEdit(self)
         self.play_trans.setText(QApplication.translate(
-            "i18n", "Translated text here!"))
+            config.APP_I18N, "Translated text here!"))
         self.play_trans.setReadOnly(True)
 
         self.html_file_label = QLabel(QApplication.translate(
-            "i18n", "HTML file"))
+            config.APP_I18N, "HTML file"))
         self.html_file_line = QLineEdit()
         self.html_file_line.setReadOnly(True)
 
@@ -119,7 +120,7 @@ class play_widget(QWidget):
             self.websocket_worker.start()
 
         self.play_btn.setText(
-            QApplication.translate("i18n", "Stop recording"))
+            QApplication.translate(config.APP_I18N, "Stop recording"))
 
     def stop_recording(self):
 
@@ -128,7 +129,7 @@ class play_widget(QWidget):
         self.translator_worker.requestInterruption()
 
         self.play_btn.setText(QApplication.translate(
-            "i18n", "Start recording"))
+            config.APP_I18N, "Start recording"))
 
         want_terminate_thread(self.recording_worker)
         want_terminate_thread(self.recognizer_worker)
@@ -159,17 +160,21 @@ class play_widget(QWidget):
 
     # TODO: Error management
     def recording_error(self, err):
-        pass
-        # print(err)
+        self.stop_recording()
+        show_critical_error("Recording error",
+                            "Cannot use any recording device!")
 
     def recognizer_error(self, err):
-        pass
-        # print(err)
+        self.stop_recording()
+        show_critical_error("Recognizer error",
+                            "Recognizer service report error!")
 
     def translator_error(self, err):
-        pass
-        # print(err)
+        self.stop_recording()
+        show_critical_error("Translator error",
+                            "Translator service report error!")
 
     def websocket_error(self, err):
-        pass
-        # print(err)
+        self.stop_recording()
+        show_critical_error("Websocket error",
+                            "Websocket report error!")

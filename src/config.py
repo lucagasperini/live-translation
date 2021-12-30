@@ -28,6 +28,10 @@ APP_NAME = "livetranslation"
 APP_VERSION = "1.0.0"
 APP_DISPLAYNAME = "Live Translation"
 APP_THREAD_TIMEOUT = 100
+APP_I18N = "i18n"
+
+AUDIO_CHUNK = 1024
+AUDIO_CHANNELS = 1
 
 WIDGET_PASSWORD_TEXT = "SECRET_PASSWORD"
 
@@ -109,10 +113,14 @@ def config_load(arg_config_file="", arg_verbose=False, arg_log_file=""):
     global verbose
     if arg_verbose == False:
         verbose = bool(qsettings.value("verbose", False))
+    else:
+        verbose = True
 
     global log_file
     if arg_log_file == "":
         log_file = qsettings.value("log_file", "")
+    else:
+        log_file = arg_log_file
 
     global log_size
     log_size = int(qsettings.value("log_size", log_size))
@@ -164,7 +172,9 @@ def config_load(arg_config_file="", arg_verbose=False, arg_log_file=""):
 def config_save(config_file=""):
     qsettings = config_open(config_file)
 
+    # NOTE: this value is overrided by application argument
     qsettings.setValue("verbose", verbose)
+    # NOTE: this value is overrided by application argument
     qsettings.setValue("log_file", log_file)
     qsettings.setValue("log_size", log_size)
     qsettings.setValue("log_level", log_level)

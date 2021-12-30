@@ -15,17 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
+from os import error
 import pyaudio
 
 from PyQt5.QtCore import QThread
 from PyQt5.QtCore import pyqtSignal
 
+import config
+from utils import print_err
 from utils import print_log
 from utils import log_code
-
-CHUNK = 1024
-CHANNELS = 1
-SENS = 1
 
 
 class audio_device():
@@ -69,9 +68,12 @@ class recording(QThread):
 
         pyaudio_obj = pyaudio.PyAudio()
 
+        # https://people.csail.mit.edu/hubert/pyaudio/docs/#pyaudio.PyAudio.get_device_count
         for i in range(pyaudio_obj.get_device_count()):
+            # https://people.csail.mit.edu/hubert/pyaudio/docs/#pyaudio.PyAudio.get_device_info_by_index
             dev_info = pyaudio_obj.get_device_info_by_index(i)
             # Only input devices are microphones
+            # TODO: Can remove duplicated?
             if dev_info.get("maxInputChannels") != 0:
                 dev = audio_device(
                     dev_info.get("index"),
@@ -82,6 +84,7 @@ class recording(QThread):
                 print_log("Audio device -> " + str(dev), log_code.DEBUG)
                 devices.append(dev)
 
+        # https://people.csail.mit.edu/hubert/pyaudio/docs/#pyaudio.PyAudio.terminate
         pyaudio_obj.terminate()
 
         return devices
@@ -91,31 +94,42 @@ class recording(QThread):
         print_log("Init pyaudio.")
         pyaudio_obj = pyaudio.PyAudio()
 
+        # https://people.csail.mit.edu/hubert/pyaudio/docs/#pyaudio.Stream.__init__
         stream = pyaudio_obj.open(input_device_index=self.device,
                                   format=pyaudio_obj.get_format_from_width(
                                       self.depth),  # or pyaudio.paInt16
-                                  channels=CHANNELS,
+                                  channels=config.AUDIO_CHANNELS,
                                   rate=self.rate,
                                   input=True,
                                   output=self.playback,
-                                  frames_per_buffer=CHUNK)
+                                  frames_per_buffer=config.AUDIO_CHUNK)
 
         print_log("start audio recording")
 
         while not self.isInterruptionRequested():
 
-            # read audio stream
-            datachunk = stream.read(CHUNK)
+            try:
+                # read audio stream
+                # https://people.csail.mit.edu/hubert/pyaudio/docs/#pyaudio.Stream.read
+                datachunk = stream.read(config.AUDIO_CHUNK)
 
-            print_log("emit dynamic audio block", log_code.DEBUG)
-            self.result.emit(datachunk)
-            if self.playback:
-                # play back audio stream
-                stream.write(datachunk, CHUNK)
+                print_log("emit dynamic audio block", log_code.DEBUG)
+                self.result.emit(datachunk)
+
+                if self.playback:
+                    # play back audio stream
+                    # https://people.csail.mit.edu/hubert/pyaudio/docs/#pyaudio.Stream.write
+                    stream.write(datachunk, config.AUDIO_CHUNK)
+
+            except BaseException as err:
+                print_err("Failed audio recording!", self.error)
 
         print_log("end audio recording")
 
+        # https://people.csail.mit.edu/hubert/pyaudio/docs/#pyaudio.Stream.stop_stream
         stream.stop_stream()
+        # https://people.csail.mit.edu/hubert/pyaudio/docs/#pyaudio.Stream.close
         stream.close()
         print_log("Close pyaudio.")
+        # https://people.csail.mit.edu/hubert/pyaudio/docs/#pyaudio.PyAudio.terminate
         pyaudio_obj.terminate()

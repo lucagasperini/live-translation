@@ -25,12 +25,14 @@ import nls
 
 import config
 from utils import log_code
+from utils import print_err
 from utils import print_log
 
 NLS_URL = "wss://nls-gateway.cn-shanghai.aliyuncs.com/ws/v1"
 NLS_STATUS_OK = 20000000
 
 
+# Documentation at https://help.aliyun.com/document_detail/374322.html
 class recognizer(QThread):
     result = pyqtSignal(str)
     error = pyqtSignal(str)
@@ -63,8 +65,7 @@ class recognizer(QThread):
         if msg["header"]["status"] == NLS_STATUS_OK:
             print_log("NlsSpeechRecognizer status ok", log_code.INFO)
         else:
-            print_log("NlsSpeechRecognizer status failed",
-                      log_code.ERROR, self.error)
+            print_err("NlsSpeechRecognizer status failed", self.error)
             print_log("on_start:{}".format(message))
 
     def on_sentence_begin(self, message, *args):
@@ -79,7 +80,7 @@ class recognizer(QThread):
         self.result.emit(msg["payload"]["result"])
 
     def on_error(self, message, *args):
-        print_log("NlsSpeechRecognizer error", log_code.ERROR, self.error)
+        print_err("NlsSpeechRecognizer error", self.error)
         print_log("on_error args=>{} message=>{}".format(
             args, message))
 
@@ -99,10 +100,11 @@ class recognizer(QThread):
 
         print_log("Starting recognizer_worker")
 
-        r = self.api.start(aformat="pcm",
-                           enable_punctutation_prediction=True,
-                           enable_inverse_text_normalization=True,
-                           timeout=60)
+        if not self.api.start(aformat="pcm",
+                              enable_punctutation_prediction=True,
+                              enable_inverse_text_normalization=True,
+                              timeout=60):
+            print_err("Cant start recognizer API", self.error)
 
         while not self.isInterruptionRequested():
             buffer = self.q.get()
@@ -113,9 +115,7 @@ class recognizer(QThread):
             slices = zip(*(iter(buffer),) * 640)
             for i in slices:
                 if not self.api.send_audio(bytes(i)):
-                    print_log("Sending audio data to recognizer",
-                              log_code.ERROR, self.error)
-                    self.requestInterruption()
+                    print_err("Sending audio data to recognizer", self.error)
 
         print_log("Stoping recognition",
                   log_code.DEBUG if self.api.stop() else log_code.ERROR,
@@ -123,4 +123,5 @@ class recognizer(QThread):
 
         print_log("Closing recognizer_worker")
 
-        self.api.shutdown()
+        if not self.api.shutdown():
+            print_err("Cant shutdown recognizer API")

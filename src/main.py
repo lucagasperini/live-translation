@@ -26,6 +26,7 @@ import config
 from lock import lock_file
 from mainwindow import mainwindow
 from utils import print_log
+from utils import show_critical_error
 from utils import log_code
 
 
@@ -37,24 +38,24 @@ def main():
 
     parser = QCommandLineParser()
     parser.setApplicationDescription(QApplication.translate(
-        "i18n", "Just a live translation utility"))
+        config.APP_I18N, "Just a live translation utility"))
     parser.addHelpOption()
     parser.addVersionOption()
 
     opt_verbose = QCommandLineOption("verbose",
-                                     QApplication.translate("i18n", "Verbose output"))
+                                     QApplication.translate(config.APP_I18N, "Verbose output"))
     parser.addOption(opt_verbose)
 
     opt_config_file = QCommandLineOption(["c", "config"],
                                          QApplication.translate(
-        "i18n", "Config file path"),
+        config.APP_I18N, "Config file path"),
         "config",
         "")
     parser.addOption(opt_config_file)
 
     opt_log_file = QCommandLineOption(["l", "log"],
                                       QApplication.translate(
-        "i18n", "Log file path"),
+        config.APP_I18N, "Log file path"),
         "log",
         "")
     parser.addOption(opt_log_file)
@@ -77,10 +78,8 @@ def main():
 
     lock = lock_file()
     if not lock.init():
-        QMessageBox.critical(None, QApplication.translate(
-            "i18n", "Duplicate process"), QApplication.translate("i18n",
-                                                                 "Please, close other session of this app!"),
-            QMessageBox.StandardButton.Ok)
+        show_critical_error("Duplicate process",
+                            "Please, close other session of this app!")
         return -1
 
     window = mainwindow()

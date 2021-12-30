@@ -31,6 +31,7 @@ from recording import recording
 
 from utils import print_log
 from utils import want_terminate_thread
+from utils import show_critical_error
 from checkable_cbox import CheckableComboBox
 from languages import get_lang_names
 from languages import get_lang_by_name
@@ -47,73 +48,73 @@ class settings_widget(QWidget):
         self.IndexWidgetCentralWidget.setLayout(layout)
 
         self.device_label = QLabel(QApplication.translate(
-            "i18n", "Audio input device:"))
+            config.APP_I18N, "Audio input device:"))
         self.device_cbox = QComboBox()
 
         self.sentence_limit_label = QLabel(QApplication.translate(
-            "i18n", "Sentence limit:"))
+            config.APP_I18N, "Sentence limit:"))
         self.sentence_limit_num = QSpinBox()
         self.sentence_limit_num.setMinimum(1)
         self.sentence_limit_num.setMaximum(1024)
 
         self.rate_label = QLabel(QApplication.translate(
-            "i18n", "Audio sample rate:"))
+            config.APP_I18N, "Audio sample rate:"))
         self.rate_cbox = QComboBox()
         self.rate_cbox.addItems(["8000", "16000"])
 
         self.lang_src_label = QLabel(QApplication.translate(
-            "i18n", "Source language:"))
+            config.APP_I18N, "Source language:"))
         self.lang_src_cbox = QComboBox()
         self.lang_src_cbox.addItems(sorted(get_lang_names()))
 
         self.lang_trg_label = QLabel(QApplication.translate(
-            "i18n", "Target language:"))
+            config.APP_I18N, "Target language:"))
         self.lang_trg_cbox = CheckableComboBox()
         self.lang_trg_cbox.addItems(sorted(get_lang_names()))
 
         self.test_btn = QPushButton()
         self.test_btn.setText(QApplication.translate(
-            "i18n", "Test Microphone"))
+            config.APP_I18N, "Test Microphone"))
 
         self.port_label = QLabel(QApplication.translate(
-            "i18n", "Http server port:"))
+            config.APP_I18N, "Http server port:"))
         self.port_num = QSpinBox()
         self.port_num.setMinimum(1024)
         self.port_num.setMaximum(65535)
 
         self.refresh_label = QLabel(QApplication.translate(
-            "i18n", "Client refresh time:"))
+            config.APP_I18N, "Client refresh time:"))
         self.refresh_num = QDoubleSpinBox()
         self.refresh_num.setMinimum(0)
         self.refresh_num.setMaximum(60)
 
         self.s2t_akid_label = QLabel(QApplication.translate(
-            "i18n", "Speech to Text API akid:"))
+            config.APP_I18N, "Speech to Text API akid:"))
         self.s2t_akid_line = QLineEdit()
         self.s2t_akid_line.setEchoMode(QLineEdit.Password)
 
         self.s2t_aksecret_label = QLabel(QApplication.translate(
-            "i18n", "Speech to Text API aksecret:"))
+            config.APP_I18N, "Speech to Text API aksecret:"))
         self.s2t_aksecret_line = QLineEdit()
         self.s2t_aksecret_line.setEchoMode(QLineEdit.Password)
 
         self.s2t_appkey_label = QLabel(QApplication.translate(
-            "i18n", "Speech to Text API appkey:"))
+            config.APP_I18N, "Speech to Text API appkey:"))
         self.s2t_appkey_line = QLineEdit()
         self.s2t_appkey_line.setEchoMode(QLineEdit.Password)
 
         self.trans_akid_label = QLabel(QApplication.translate(
-            "i18n", "Translation API akid:"))
+            config.APP_I18N, "Translation API akid:"))
         self.trans_akid_line = QLineEdit()
         self.trans_akid_line.setEchoMode(QLineEdit.Password)
 
         self.trans_aksecret_label = QLabel(QApplication.translate(
-            "i18n", "Translation API aksecret:"))
+            config.APP_I18N, "Translation API aksecret:"))
         self.trans_aksecret_line = QLineEdit()
         self.trans_aksecret_line.setEchoMode(QLineEdit.Password)
 
         self.trans_appkey_label = QLabel(QApplication.translate(
-            "i18n", "Translation API appkey:"))
+            config.APP_I18N, "Translation API appkey:"))
         self.trans_appkey_line = QLineEdit()
         self.trans_appkey_line.setEchoMode(QLineEdit.Password)
 
@@ -219,12 +220,13 @@ class settings_widget(QWidget):
             rate=config.audio_rate,
             depth=config.audio_depth)
         self.recording_worker.start()
-        self.test_btn.setText(QApplication.translate("i18n", "Test Stop"))
+        self.test_btn.setText(QApplication.translate(
+            config.APP_I18N, "Test Stop"))
 
     def stop_recording(self):
         self.recording_worker.requestInterruption()
         self.test_btn.setText(
-            QApplication.translate("i18n", "Test Microphone"))
+            QApplication.translate(config.APP_I18N, "Test Microphone"))
 
         want_terminate_thread(self.recording_worker)
 
@@ -289,7 +291,7 @@ class settings_widget(QWidget):
     def trans_appkey_line_changed(self, value):
         config.api_trans_appkey = value
 
-    # TODO: Error management
     def recording_error(self, err):
-        pass
-        # print(err)
+        self.stop_recording()
+        show_critical_error("Recording error",
+                            "Cannot use any recording device!")

@@ -27,7 +27,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import QThread
 
 import config
-from utils import log_code, print_log
+from utils import print_log
 
 
 class websocket(QThread):

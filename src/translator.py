@@ -31,6 +31,7 @@ from utils import log_code
 from utils import print_log
 
 
+# Documentation at https://help.aliyun.com/document_detail/158244.html
 class translator(QThread):
     # result = pyqtSignal(str, str)
     result = pyqtSignal(dict)

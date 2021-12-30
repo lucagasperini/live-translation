@@ -23,17 +23,12 @@ import wave
 
 import config
 
-# NOTE: No more used
-
-
-def in_range_16bit(items, data, delta):
-    for i in range(0, items - 2, 2):
-        if min(data[i], data[i+1]) > delta and max(data[i], data[i+1]) < 255 - delta:
-            return True
-    return False
-
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QApplication
 
 # NOTE: No more used, debug purpose
+
+
 def pcm2wav(data, outputfile, channels=1, depth=2, rate=16000):
     with wave.open(outputfile, 'wb') as wavfile:
         wavfile.setparams((channels, depth, rate, 0, 'NONE', 'NONE'))
@@ -45,10 +40,6 @@ class log_code(enum.Enum):
     LOG = 1
     INFO = 2
     ERROR = 3
-
-
-def print_err(text="", qsignal=None, file=""):
-    print_log(text, log_code.ERROR, qsignal, True, file)
 
 
 def print_log(text="", code=log_code.LOG, qsignal=None, verbose=False, file=""):
@@ -79,7 +70,18 @@ def print_log(text="", code=log_code.LOG, qsignal=None, verbose=False, file=""):
         stream.close()
 
 
+def print_err(text="", qsignal=None, file=""):
+    print_log(text, log_code.ERROR, qsignal, True, file)
+
+
 def want_terminate_thread(thread):
     if not thread.wait(config.APP_THREAD_TIMEOUT):
         thread.terminate()
         thread.wait()
+
+
+def show_critical_error(title="", text="", parent=None):
+    QMessageBox.critical(parent,
+                         QApplication.translate(config.APP_I18N, title),
+                         QApplication.translate(config.APP_I18N, text),
+                         QMessageBox.StandardButton.Ok)

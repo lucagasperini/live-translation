@@ -71,7 +71,6 @@ def serve_forever(port, refresh, queue):
 
 
 def run_http_server(port, refresh):
-
     print_log("Starting process of http server at " + str(port))
     global http_worker
     http_worker = Process(target=serve_forever, args=(
