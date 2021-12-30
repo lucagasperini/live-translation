@@ -74,24 +74,24 @@ class recognizer(QThread):
             on_error=self.on_error,
             on_close=self.on_close
         )
-        print_log("Init recognizer_worker")
+        print_log("Init recognizer")
 
     def on_start(self, message, *args):
         msg = json.loads(message)
         if msg["header"]["status"] == NLS_OK:
-            print_log("NlsSpeechRecognizer status ok", log_code.INFO)
+            print_log("NLS status start ok", log_code.INFO)
         else:
-            print_err("NlsSpeechRecognizer start failed", self.error)
+            print_err("NLS status start failed", self.error)
             print_log("on_start:{}".format(message))
 
     def on_sentence_begin(self, message, *args):
         print_log("on_sentence_begin:{}".format(message))
-        print_log("NlsSpeechTranscriber start sentence", log_code.INFO)
+        print_log("NLS status start sentence", log_code.INFO)
 
     def on_sentence_end(self, message, *args):
         msg = json.loads(message)
         print_log("on_sentence_end:{}".format(message))
-        print_log("NlsSpeechRecognizer end sentence: " +
+        print_log("NLS status end sentence: " +
                   msg["payload"]["result"], log_code.INFO)
         self.result.emit(msg["payload"]["result"])
 
@@ -99,22 +99,22 @@ class recognizer(QThread):
         msg = json.loads(message)
         if msg["header"]["status"] in RESTARTABLE_ERROR:
             self.need_restart = True
-            print_err("NlsSpeechRecognizer restartable error")
+            print_err("NLS status restartable error")
         elif msg["header"]["status"] in NOT_RESTARTABLE_ERROR:
-            print_err("NlsSpeechRecognizer fatal error", self.error)
+            print_err("NLS status fatal error", self.error)
         else:
-            print_err("NlsSpeechRecognizer unknown error")
+            print_err("NLS status unknown error")
 
         print_log("on_error args=>{} message=>{}".format(
             args, message))
 
     def on_close(self, *args):
-        print_log("NlsSpeechRecognizer close")
+        print_log("NLS status close")
 
     def on_completed(self, message, *args):
         print_log("on_completed:args=>{} message=>{}".format(
             args, message))
-        print_log("NlsSpeechTranscriber completed", log_code.INFO)
+        print_log("NLS status completed", log_code.INFO)
 
     def data_ready(self, data):
         print_log("audio data ready to send to worker", log_code.DEBUG)
@@ -132,7 +132,7 @@ class recognizer(QThread):
 
     def run(self):
 
-        print_log("Starting recognizer_worker")
+        print_log("Starting recognizer")
 
         if not self.api.start(aformat="pcm",
                               enable_punctutation_prediction=True,
@@ -159,7 +159,7 @@ class recognizer(QThread):
                   log_code.DEBUG if self.api.stop() else log_code.ERROR,
                   self.error)
 
-        print_log("Closing recognizer_worker")
+        print_log("Closing recognizer")
 
         if not self.api.shutdown():
             print_err("Cant shutdown recognizer API")

@@ -35,15 +35,15 @@ from websocket import websocket
 
 
 class play_widget(QWidget):
-    recognizer_worker = None
-    recording_worker = None
-    translator_worker = None
-    websocket_worker = None
-
-    sentences = []
 
     def __init__(self, parent=None):
         super(__class__, self).__init__(parent)
+
+        self.recognizer_worker = None
+        self.recording_worker = None
+        self.translator_worker = None
+        self.websocket_worker = None
+        self.sentences = []
 
         self.IndexWidgetCentralWidget = QWidget(self)
         self.MainLayout = layout = QVBoxLayout()

@@ -47,15 +47,14 @@ class recording(QThread):
     result = pyqtSignal(bytes)
     error = pyqtSignal(str)
 
-    pyaudio_obj = None
-
-    playback = False
-    device = 1
-    rate = 16000
-    depth = 2
-
     def __init__(self, parent=None):
         super(__class__, self).__init__(parent)
+
+        self.pyaudio_obj = None
+        self.playback = False
+        self.device = 1
+        self.rate = 16000
+        self.depth = 2
 
     def init(self, playback=False, device=1, rate=16000, depth=2):
         self.playback = playback

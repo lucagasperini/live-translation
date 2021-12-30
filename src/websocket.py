@@ -33,14 +33,13 @@ from utils import print_log
 class websocket(QThread):
     error = pyqtSignal(str)
 
-    port = 3333
-    html_file = ""
-    js_file = ""
-    refresh = 1
-
     def __init__(self, parent=None):
         super(__class__, self).__init__(parent)
         self.q = Queue(config.APP_QUEUE_MAX)
+        self.port = 3333
+        self.html_file = ""
+        self.js_file = ""
+        self.refresh = 1
 
     def init(self, port, refresh, html_file="", js_file=""):
         self.port = port

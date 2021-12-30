@@ -37,14 +37,12 @@ class translator(QThread):
     result = pyqtSignal(str, str)
     error = pyqtSignal(str)
 
-    q = None
-    client = None
-    lang_src = "zh"
-    lang_trg = ["en"]
-
     def __init__(self, parent=None):
         super(__class__, self).__init__(parent)
         self.q = Queue(config.APP_QUEUE_MAX)
+        self.client = None
+        self.lang_src = "zh"
+        self.lang_trg = ["en"]
 
     def init(self, lang_src, lang_trg):
         self.lang_src = lang_src
