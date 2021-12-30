@@ -21,6 +21,7 @@
 from PyQt5.QtCore import QSettings
 
 APP_SETTINGS_FILENAME = "livetranslation.ini"
+APP_LOCK_FILENAME = "livetranslation.lock"
 APP_NAME = "livetranslation"
 APP_VERSION = "1.0.0"
 APP_DISPLAYNAME = "Live Translation"

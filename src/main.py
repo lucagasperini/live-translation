@@ -27,6 +27,8 @@ from PyQt5 import QtGui, QtCore, Qt
 from PyQt5.QtWidgets import QApplication, QDialogButtonBox, QMessageBox
 from PyQt5.QtCore import QDir, QCommandLineOption, QCommandLineParser
 
+from lock import lock_file
+
 
 def main():
     app = QApplication(sys.argv)
@@ -74,37 +76,20 @@ def main():
 
     print_log("End settings parsing.", log_code.LOG)
 
-    lock_file_path = QDir.tempPath() + "/livetranslation.lock"
-
-    if os.path.exists(lock_file_path):
-        process_duplicate_result = QMessageBox.critical(None, QApplication.translate(
+    lock = lock_file()
+    if not lock.init():
+        QMessageBox.critical(None, QApplication.translate(
             "i18n", "Duplicate process"), QApplication.translate("i18n",
-                                                                 "Close other session of this app, "
-                                                                 "if you are sure "
-                                                                 "there are not other "
-                                                                 "session running"
-                                                                 "in this computer, say YES."),
-            QMessageBox.Yes | QMessageBox.No)
-
-        if process_duplicate_result == QMessageBox.No:
-            sys.exit(0)
-        else:
-            print_log("Using old lock file.")
-    else:
-        lock_file = open(lock_file_path, "x")
-        lock_file.close()
-        print_log("Created lock file.")
+                                                                 "Please, close other session of this app!"),
+            QMessageBox.StandardButton.Ok)
+        return -1
 
     window = mainwindow()
     window.show()
 
     retcode = app.exec_()
 
-    if os.path.exists(lock_file_path):
-        os.remove(lock_file_path)
-        print_log("Deleted lock file.")
-    else:
-        print_log("Lock file not found.")
+    del lock
 
     print_log("Saving config file.")
     config.config_save()
