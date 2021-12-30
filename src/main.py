@@ -16,8 +16,8 @@
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
 from mainwindow import mainwindow
-from settings import app_settings
-from utils import print_log
+import config
+from utils import print_log, log_code
 
 
 import sys
@@ -27,12 +27,12 @@ from PyQt5 import QtGui, QtCore, Qt
 from PyQt5.QtWidgets import QApplication, QDialogButtonBox, QMessageBox
 from PyQt5.QtCore import QDir, QCommandLineOption, QCommandLineParser
 
-if __name__ == '__main__':
 
+def main():
     app = QApplication(sys.argv)
-    app.setApplicationName(app_settings.appname)
-    app.setApplicationVersion(app_settings.version)
-    app.setApplicationDisplayName(app_settings.displayname)
+    app.setApplicationName(config.APP_NAME)
+    app.setApplicationVersion(config.APP_VERSION)
+    app.setApplicationDisplayName(config.APP_DISPLAYNAME)
 
     parser = QCommandLineParser()
     parser.setApplicationDescription(QApplication.translate(
@@ -46,33 +46,33 @@ if __name__ == '__main__':
 
     opt_config_file = QCommandLineOption(["c", "config"],
                                          QApplication.translate(
-                                             "i18n", "Config file path"),
-                                         "config",
-                                         "")
+        "i18n", "Config file path"),
+        "config",
+        "")
     parser.addOption(opt_config_file)
 
     opt_log_file = QCommandLineOption(["l", "log"],
                                       QApplication.translate(
-                                          "i18n", "Log file path"),
-                                      "log",
-                                      "")
+        "i18n", "Log file path"),
+        "log",
+        "")
     parser.addOption(opt_log_file)
 
     parser.process(app)
 
-    app_settings.verbose = parser.isSet(opt_verbose)
+    arg_verbose = parser.isSet(opt_verbose)
 
     if parser.isSet(opt_config_file):
-        config_file = parser.value(opt_config_file)
+        arg_config_file = parser.value(opt_config_file)
     else:
-        config_file = ""
+        arg_config_file = ""
 
     if parser.isSet(opt_log_file):
-        app_settings.log_file = parser.value(opt_log_file)
+        arg_log_file = parser.value(opt_log_file)
 
-    app_settings.read_file(config_file)
+    config.config_load(arg_config_file, arg_verbose, arg_log_file)
 
-    print_log("End settings parsing.")
+    print_log("End settings parsing.", log_code.LOG)
 
     lock_file_path = QDir.tempPath() + "/livetranslation.lock"
 
@@ -107,8 +107,12 @@ if __name__ == '__main__':
         print_log("Lock file not found.")
 
     print_log("Saving config file.")
-    app_settings.write_file(config_file)
+    config.config_save()
 
     print_log("Closing app. retcode: " + str(retcode))
 
-    sys.exit(retcode)
+    return retcode
+
+
+if __name__ == '__main__':
+    sys.exit(main())

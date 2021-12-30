@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
+###
+# This file is not used anymore!
+###
+
 from utils import print_log
 from multiprocessing import Process, Queue
 

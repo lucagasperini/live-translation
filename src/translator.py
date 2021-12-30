@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
-from settings import app_settings
+import config
 from utils import log_code, print_log
 
 from aliyunsdkcore.client import AcsClient
@@ -51,9 +51,9 @@ class translator(QThread):
                   lang_src + " -> " + ":".join(lang_trg))
 
         self.client = AcsClient(
-            app_settings.api_trans_akid,
-            app_settings.api_trans_aksecret,
-            app_settings.api_trans_appkey
+            config.api_trans_akid,
+            config.api_trans_aksecret,
+            config.api_trans_appkey
         )
 
     def data_ready(self, data):

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
-from settings import app_settings
+import config
 from play_widget import play_widget
 from settings_widget import settings_widget
 from utils import print_log
@@ -29,15 +29,15 @@ class mainwindow(QMainWindow):
         self.init_ui()
 
     def init_winsize(self, w, h):
-        if app_settings.win_x < 0:
+        if config.win_x < 0:
             x = (QApplication.desktop().width() / 2) - (w / 2)
         else:
-            x = app_settings.win_x
+            x = config.win_x
 
-        if app_settings.win_y < 0:
+        if config.win_y < 0:
             y = (QApplication.desktop().height() / 2) - (h / 2)
         else:
-            y = app_settings.win_y
+            y = config.win_y
 
         self.setGeometry(int(x), int(y), int(w), int(h))
         self.setFixedSize(int(w), int(h))
@@ -47,9 +47,9 @@ class mainwindow(QMainWindow):
 
         # NOTE: Isnt recursive to show two times appname on mainwindow?
         self.setWindowTitle('{} {}'.format(
-            app_settings.displayname, app_settings.version))
+            config.APP_DISPLAYNAME, config.APP_VERSION))
 
-        self.init_winsize(app_settings.win_w, app_settings.win_h)
+        self.init_winsize(config.win_w, config.win_h)
 
         self.tabman = QTabWidget(self)
 
@@ -65,7 +65,7 @@ class mainwindow(QMainWindow):
         self.setCentralWidget(self.tabman)
 
     def closeEvent(self, event) -> None:
-        app_settings.win_x = self.geometry().x()
-        app_settings.win_y = self.geometry().y()
+        config.win_x = self.geometry().x()
+        config.win_y = self.geometry().y()
         event.accept()
         return super().closeEvent(event)

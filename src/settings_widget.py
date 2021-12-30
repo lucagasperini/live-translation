@@ -16,7 +16,7 @@
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
 from recording import recording
-from settings import app_settings
+import config
 from utils import print_log, want_terminate_thread
 from checkable_cbox import CheckableComboBox
 from languages import get_lang_names, get_lang_codes, get_lang_by_name, get_lang_by_code
@@ -143,18 +143,18 @@ class settings_widget(QWidget):
 
         self.init_device_list()
 
-        self.sentence_limit_num.setValue(app_settings.sentence_limit)
-        self.rate_cbox.setCurrentText(str(app_settings.audio_rate))
+        self.sentence_limit_num.setValue(config.sentence_limit)
+        self.rate_cbox.setCurrentText(str(config.audio_rate))
         self.lang_src_cbox.setCurrentText(
-            get_lang_by_code(app_settings.lang_src))
+            get_lang_by_code(config.lang_src))
 
         tmp_lang_names = []
-        for i in app_settings.lang_trg:
+        for i in config.lang_trg:
             tmp_lang_names.append(get_lang_by_code(i))
 
         self.lang_trg_cbox.selectedItems(tmp_lang_names)
-        self.port_num.setValue(app_settings.http_port)
-        self.refresh_num.setValue(app_settings.http_refresh)
+        self.port_num.setValue(config.http_port)
+        self.refresh_num.setValue(config.http_refresh)
 
         self.s2t_akid_line.setText(SECRET_PASSWORD)
         self.s2t_aksecret_line.setText(SECRET_PASSWORD)
@@ -191,15 +191,15 @@ class settings_widget(QWidget):
         devices = self.recording_worker.get_microphone_device()
         for i in range(len(devices)):
             self.device_cbox.addItem(str(devices[i]))
-            if app_settings.audio_dev == devices[i].index:
+            if config.audio_dev == devices[i].index:
                 self.device_cbox.setCurrentIndex(i)
 
     def start_recording(self):
         self.recording_worker.init(
             playback=True,
-            device=app_settings.audio_dev,
-            rate=app_settings.audio_rate,
-            depth=app_settings.audio_depth)
+            device=config.audio_dev,
+            rate=config.audio_rate,
+            depth=config.audio_depth)
         self.recording_worker.start()
         self.test_btn.setText(QApplication.translate("i18n", "Test Stop"))
 
@@ -224,52 +224,52 @@ class settings_widget(QWidget):
         devices = self.recording_worker.get_microphone_device()
         for i in range(len(devices)):
             if str(devices[i]) == current_device:
-                app_settings.audio_dev = devices[i].index
+                config.audio_dev = devices[i].index
 
     def sentence_limit_num_changed(self, value):
-        app_settings.sentence_limit = value
+        config.sentence_limit = value
 
     def rate_cbox_changed(self, value):
         current_rate = self.rate_cbox.itemText(value)
         if current_rate == "8000":
-            app_settings.audio_rate = 8000
+            config.audio_rate = 8000
         elif current_rate == "16000":
-            app_settings.audio_rate = 16000
+            config.audio_rate = 16000
         else:
             print_log("Invalid rate_cbox value")
 
     def lang_src_cbox_changed(self, value):
-        app_settings.lang_src = get_lang_by_name(
+        config.lang_src = get_lang_by_name(
             self.lang_src_cbox.itemText(value))
 
     def lang_trg_cbox_changed(self, value):
-        app_settings.lang_trg = []
+        config.lang_trg = []
         for i in self.lang_trg_cbox.currentData():
-            app_settings.lang_trg.append(get_lang_by_name(i))
+            config.lang_trg.append(get_lang_by_name(i))
 
     def port_num_changed(self, value):
-        app_settings.http_port = value
+        config.http_port = value
 
     def refresh_num_changed(self, value):
-        app_settings.http_refresh = value
+        config.http_refresh = value
 
     def s2t_akid_line_changed(self, value):
-        app_settings.api_s2t_akid = value
+        config.api_s2t_akid = value
 
     def s2t_aksecret_line_changed(self, value):
-        app_settings.api_s2t_aksecret = value
+        config.api_s2t_aksecret = value
 
     def s2t_appkey_line_changed(self, value):
-        app_settings.api_s2t_appkey = value
+        config.api_s2t_appkey = value
 
     def trans_akid_line_changed(self, value):
-        app_settings.api_trans_akid = value
+        config.api_trans_akid = value
 
     def trans_aksecret_line_changed(self, value):
-        app_settings.api_trans_aksecret = value
+        config.api_trans_aksecret = value
 
     def trans_appkey_line_changed(self, value):
-        app_settings.api_trans_appkey = value
+        config.api_trans_appkey = value
 
     # TODO: Error management
     def recording_error(self, err):

@@ -16,7 +16,7 @@
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
 from logging import DEBUG
-from settings import app_settings
+import config
 from utils import log_code, print_log
 from queue import Queue
 import time

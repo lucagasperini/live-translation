@@ -15,8 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
-from logging import ERROR, log
-from settings import app_settings
+import config
 
 import datetime
 import wave
@@ -58,19 +57,19 @@ def print_log(text="", code=log_code.LOG, qsignal=None, verbose=False, file=""):
     if code == log_code.ERROR and qsignal != None:
         qsignal.emit(text)
 
-    if code.value >= log_code[app_settings.log_level].value:
+    if code.value >= log_code[config.log_level].value:
         msg = "[" + code.name + "] " + text
     else:
         return
 
-    if verbose == True or app_settings.verbose == True:
+    if verbose == True or config.verbose == True:
         print(msg)
-    if file == "" and app_settings.log_file != "":
-        file = app_settings.log_file
+    if file == "" and config.log_file != "":
+        file = config.log_file
 
     if file != "":
         if os.path.exists(file):
-            if os.path.getsize(file) > app_settings.log_size:
+            if os.path.getsize(file) > config.log_size:
                 stream = open(file, "w", encoding="utf-8")
             else:
                 stream = open(file, "a", encoding="utf-8")

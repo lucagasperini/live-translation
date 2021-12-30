@@ -17,7 +17,7 @@
 
 from recording import recording
 from translator import translator
-from settings import app_settings
+import config
 from recognizer import recognizer
 from utils import want_terminate_thread
 from websocket import websocket
@@ -84,22 +84,22 @@ class play_widget(QWidget):
 
     def start_recording(self):
         self.recording_worker.init(playback=False,
-                                   device=app_settings.audio_dev,
-                                   rate=app_settings.audio_rate,
-                                   depth=app_settings.audio_depth)
+                                   device=config.audio_dev,
+                                   rate=config.audio_rate,
+                                   depth=config.audio_depth)
         self.recording_worker.start()
 
-        self.recognizer_worker.init(akid=app_settings.api_s2t_akid,
-                                    aksecret=app_settings.api_s2t_aksecret,
-                                    appkey=app_settings.api_s2t_appkey)
+        self.recognizer_worker.init(akid=config.api_s2t_akid,
+                                    aksecret=config.api_s2t_aksecret,
+                                    appkey=config.api_s2t_appkey)
         self.recognizer_worker.start()
 
         self.translator_worker.init(
-            app_settings.lang_src, app_settings.lang_trg)
+            config.lang_src, config.lang_trg)
         self.translator_worker.start()
 
         self.websocket_worker.init(
-            app_settings.http_port, app_settings.http_refresh)
+            config.http_port, config.http_refresh)
         if not self.websocket_worker.isRunning():
             self.websocket_worker.start()
 
@@ -133,7 +133,7 @@ class play_widget(QWidget):
         self.recognizer_worker.data_ready(data)
 
     def write_sentence_translated(self, data):
-        if len(self.sentences) >= app_settings.sentence_limit:
+        if len(self.sentences) >= config.sentence_limit:
             self.sentences.pop(0)
         self.sentences.append(dict(data))
 
