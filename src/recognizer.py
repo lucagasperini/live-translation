@@ -43,7 +43,7 @@ class recognizer(QThread):
 
     def __init__(self, parent=None):
         super(__class__, self).__init__(parent)
-        self.q = Queue()  # NOTE: Should I make a max?
+        self.q = Queue(config.APP_QUEUE_MAX)
 
     def init(self, akid="", aksecret="", appkey=""):
         self.api = nls.NlsSpeechTranscriber(

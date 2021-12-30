@@ -28,6 +28,7 @@ APP_NAME = "livetranslation"
 APP_VERSION = "1.0.0"
 APP_DISPLAYNAME = "Live Translation"
 APP_THREAD_TIMEOUT = 100
+APP_QUEUE_MAX = 0
 APP_I18N = "i18n"
 
 AUDIO_CHUNK = 1024

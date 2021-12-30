@@ -33,8 +33,7 @@ from utils import print_log
 
 # Documentation at https://help.aliyun.com/document_detail/158244.html
 class translator(QThread):
-    # result = pyqtSignal(str, str)
-    result = pyqtSignal(dict)
+    result = pyqtSignal(str, str)
     error = pyqtSignal(str)
 
     q = None
@@ -44,7 +43,7 @@ class translator(QThread):
 
     def __init__(self, parent=None):
         super(__class__, self).__init__(parent)
-        self.q = Queue()  # NOTE: Should I make a max?
+        self.q = Queue(config.APP_QUEUE_MAX)
 
     def init(self, lang_src, lang_trg):
         self.lang_src = lang_src
@@ -93,5 +92,4 @@ class translator(QThread):
                 print_log("Translated to " + self.lang_src +
                           "->" + self.lang_trg[i] + " text: " + output[self.lang_trg[i]])
 
-                # self.result.emit(self.lang_trg[i], output[self.lang_trg[i]])
-            self.result.emit(output)
+                self.result.emit(self.lang_trg[i], output[self.lang_trg[i]])

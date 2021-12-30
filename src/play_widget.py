@@ -148,26 +148,36 @@ class play_widget(QWidget):
     def audio_recording(self, data):
         self.recognizer_worker.data_ready(data)
 
-    def write_sentence_translated(self, data):
-        if len(self.sentences) >= config.sentence_limit:
+    def write_sentence_translated(self, lang, text):
+
+        is_new_sentence = True
+        for i in self.sentences:
+            if i.get(lang) == None:
+                i[lang] = text
+                is_new_sentence = False
+
+        if is_new_sentence:
+            self.sentences.append({lang: text})
+
+        if len(self.sentences) > config.sentence_limit:
             self.sentences.pop(0)
-        self.sentences.append(dict(data))
 
-        display_text = json.dumps(self.sentences)
+        display_text = json.dumps(
+            self.sentences, ensure_ascii=False).encode('utf8').decode()
 
-        self.play_trans.setText(display_text)
+        self.play_trans.document().setPlainText(display_text)
         self.websocket_worker.data_ready(display_text)
 
-    # TODO: Error management
     def recording_error(self, err):
         self.stop_recording()
         show_critical_error("Recording error",
                             "Cannot use any recording device!")
 
     def recognizer_error(self, err):
-        self.stop_recording()
-        show_critical_error("Recognizer error",
-                            "Recognizer service report error!")
+        # self.stop_recording()
+        # show_critical_error("Recognizer error",
+        #                    "Recognizer service report error!")
+        pass
 
     def translator_error(self, err):
         self.stop_recording()

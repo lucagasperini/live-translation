@@ -26,9 +26,10 @@ from multiprocessing import Queue
 import http.server
 from http import HTTPStatus
 
+import config
 from utils import print_log
 
-http_handler_queue = Queue()
+http_handler_queue = Queue(config.APP_QUEUE_MAX)
 http_worker = None
 
 
