@@ -15,34 +15,47 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
-import time
-from utils import print_log
 
+import os
 import asyncio
-import websockets
-
 from queue import Queue
 
-from PyQt5.QtCore import QThread, pyqtSignal
+import websockets
 
-import random
+from PyQt5.QtCore import QDir
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import QThread
+
+import config
+from utils import log_code, print_log
 
 
 class websocket(QThread):
     error = pyqtSignal(str)
 
     port = 3333
-    event_loop = None
-    server = None
+    html_file = ""
+    js_file = ""
     refresh = 1
 
     def __init__(self, parent=None):
         super(__class__, self).__init__(parent)
         self.q = Queue()  # NOTE: Should I make a max?
 
-    def init(self, port, refresh):
+    def init(self, port, refresh, html_file="", js_file=""):
         self.port = port
         self.refresh = refresh
+        if html_file == "":
+            self.html_file = QDir.toNativeSeparators(
+                QDir.tempPath() + "/" + config.APP_HTML_FILENAME)
+        else:
+            self.html_file = html_file
+
+        if js_file == "":
+            self.js_file = QDir.toNativeSeparators(os.path.dirname(os.path.abspath(
+                __file__)) + "/" + config.APP_JS_FILENAME)
+        else:
+            self.js_file = js_file
 
     async def loop(self, websocket, path):
         while True:
@@ -61,7 +74,16 @@ class websocket(QThread):
         async with websockets.serve(self.loop, "127.0.0.1", self.port, extra_headers=headers):
             await asyncio.Future()
 
-    def run(self):
-        print_log("Starting websocket server at " + str(self.port))
+    def create_html_file(self):
+        fd = open(self.html_file, "w")
+        fd.write(config.APP_HTML_FILE_CONTENT.format(
+            config.APP_DISPLAYNAME, self.port, self.js_file))
+        fd.close()
+        print_log("Created html file in {}".format(self.html_file))
 
+    def run(self):
+        if not os.path.exists(self.html_file):
+            self.create_html_file()
+
+        print_log("Starting websocket server at " + str(self.port))
         asyncio.run(self.run_forever())

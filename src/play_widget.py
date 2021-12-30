@@ -15,15 +15,22 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
+import json
+
+from PyQt5.QtWidgets import QVBoxLayout
+from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QPushButton
+from PyQt5.QtWidgets import QTextEdit
+from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QLineEdit
+
+import config
 from recording import recording
 from translator import translator
-import config
 from recognizer import recognizer
 from utils import want_terminate_thread
 from websocket import websocket
-
-import json
-from PyQt5.QtWidgets import QVBoxLayout, QWidget, QApplication, QPushButton, QTextEdit
 
 
 class play_widget(QWidget):
@@ -55,9 +62,16 @@ class play_widget(QWidget):
             "i18n", "Translated text here!"))
         self.play_trans.setReadOnly(True)
 
+        self.html_file_label = QLabel(QApplication.translate(
+            "i18n", "HTML file"))
+        self.html_file_line = QLineEdit()
+        self.html_file_line.setReadOnly(True)
+
         layout.addWidget(self.play_btn)
         layout.addWidget(self.play_text)
         layout.addWidget(self.play_trans)
+        layout.addWidget(self.html_file_label)
+        layout.addWidget(self.html_file_line)
 
         self.setLayout(layout)
 
@@ -100,6 +114,7 @@ class play_widget(QWidget):
 
         self.websocket_worker.init(
             config.http_port, config.http_refresh)
+        self.html_file_line.setText(self.websocket_worker.html_file)
         if not self.websocket_worker.isRunning():
             self.websocket_worker.start()
 

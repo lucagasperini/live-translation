@@ -22,9 +22,21 @@ from PyQt5.QtCore import QSettings
 
 APP_SETTINGS_FILENAME = "livetranslation.ini"
 APP_LOCK_FILENAME = "livetranslation.lock"
+APP_HTML_FILENAME = "livetranslation.html"
+APP_JS_FILENAME = "livetranslation.js"
 APP_NAME = "livetranslation"
 APP_VERSION = "1.0.0"
 APP_DISPLAYNAME = "Live Translation"
+
+APP_HTML_FILE_CONTENT = """<!DOCTYPE html>
+<html>
+<head><title>{}</title></head>
+<body>
+<input style="display:none" type="text" id="port" value="{}" />
+<script src="{}"></script>
+</body>
+</html>"""
+
 
 # verbose output
 verbose = False
