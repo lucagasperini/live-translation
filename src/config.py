@@ -73,6 +73,10 @@ api_trans_appkey = ""
 http_port = 3333
 # http client data refresh rate
 http_refresh = 1
+# path where create a html file for open javascript file
+html_file = ""
+# path of javascript file for open websocket client
+js_file = ""
 # source language
 lang_src = "zh"
 # target languages
@@ -137,6 +141,10 @@ def config_load(arg_config_file="", arg_verbose=False, arg_log_file=""):
     http_port = int(qsettings.value("http_port", http_port))
     global http_refresh
     http_refresh = float(qsettings.value("http_refresh", http_refresh))
+    global html_file
+    html_file = qsettings.value("html_file", html_file)
+    global js_file
+    js_file = qsettings.value("js_file", js_file)
     global lang_src
     lang_src = qsettings.value("lang_src", lang_src)
     global lang_trg
@@ -171,6 +179,8 @@ def config_save(config_file=""):
     qsettings.setValue("api_trans_appkey", api_trans_appkey)
     qsettings.setValue("http_port", http_port)
     qsettings.setValue("http_refresh", http_refresh)
+    qsettings.setValue("html_file", html_file)
+    qsettings.setValue("js_file", js_file)
     qsettings.setValue("lang_src", lang_src)
     qsettings.setValue("lang_trg", ":".join(lang_trg))
     qsettings.setValue("sentence_limit", sentence_limit)
