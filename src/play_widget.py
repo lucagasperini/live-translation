@@ -149,7 +149,6 @@ class play_widget(QWidget):
         self.recognizer_worker.data_ready(data)
 
     def write_sentence_translated(self, lang, text):
-
         is_new_sentence = True
         for i in self.sentences:
             if i.get(lang) == None:
@@ -174,10 +173,9 @@ class play_widget(QWidget):
                             "Cannot use any recording device!")
 
     def recognizer_error(self, err):
-        # self.stop_recording()
-        # show_critical_error("Recognizer error",
-        #                    "Recognizer service report error!")
-        pass
+        self.stop_recording()
+        show_critical_error("Recognizer error",
+                            "Recognizer service report error!")
 
     def translator_error(self, err):
         self.stop_recording()

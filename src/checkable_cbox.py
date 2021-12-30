@@ -139,10 +139,10 @@ class CheckableComboBox(QComboBox):
 
     def addItems(self, texts, datalist=None):
         for i, text in enumerate(texts):
-            try:
-                data = datalist[i]
-            except (TypeError, IndexError):
+            if datalist == None:
                 data = None
+            else:
+                data = datalist[i]
             self.addItem(text, data)
 
     def currentData(self):

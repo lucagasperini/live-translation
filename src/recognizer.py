@@ -28,22 +28,38 @@ from utils import log_code
 from utils import print_err
 from utils import print_log
 
+# https://help.aliyun.com/document_detail/84428.html
 NLS_URL = "wss://nls-gateway.cn-shanghai.aliyuncs.com/ws/v1"
-NLS_STATUS_OK = 20000000
+NLS_OK = 20000000
 
+NLS_INACTIVITY = 40000004
+NLS_OVERLOAD = 40000005
+NLS_TIMEOUT = 41010120
 
+NLS_STOP_DATA = 41040201
+NLS_CLIENT_TOOFAST = 41040202
+
+NLS_NOT_AVAILABLE = 51040103
+NLS_TIMEOUT_2 = 51040104
+NLS_CANT_CALL = 51040105
+
+RESTARTABLE_ERROR = [NLS_INACTIVITY, NLS_TIMEOUT, NLS_STOP_DATA,
+                     NLS_NOT_AVAILABLE, NLS_TIMEOUT_2, NLS_CANT_CALL]
+NOT_RESTARTABLE_ERROR = [NLS_OVERLOAD, NLS_CLIENT_TOOFAST]
 # Documentation at https://help.aliyun.com/document_detail/374322.html
+
+
 class recognizer(QThread):
+
     result = pyqtSignal(str)
     error = pyqtSignal(str)
-
-    api = None
-
-    q = None
 
     def __init__(self, parent=None):
         super(__class__, self).__init__(parent)
         self.q = Queue(config.APP_QUEUE_MAX)
+        self.need_restart = False
+        self.count_restart = 0
+        self.api = None
 
     def init(self, akid="", aksecret="", appkey=""):
         self.api = nls.NlsSpeechTranscriber(
@@ -62,10 +78,10 @@ class recognizer(QThread):
 
     def on_start(self, message, *args):
         msg = json.loads(message)
-        if msg["header"]["status"] == NLS_STATUS_OK:
+        if msg["header"]["status"] == NLS_OK:
             print_log("NlsSpeechRecognizer status ok", log_code.INFO)
         else:
-            print_err("NlsSpeechRecognizer status failed", self.error)
+            print_err("NlsSpeechRecognizer start failed", self.error)
             print_log("on_start:{}".format(message))
 
     def on_sentence_begin(self, message, *args):
@@ -80,7 +96,15 @@ class recognizer(QThread):
         self.result.emit(msg["payload"]["result"])
 
     def on_error(self, message, *args):
-        print_err("NlsSpeechRecognizer error", self.error)
+        msg = json.loads(message)
+        if msg["header"]["status"] in RESTARTABLE_ERROR:
+            self.need_restart = True
+            print_err("NlsSpeechRecognizer restartable error")
+        elif msg["header"]["status"] in NOT_RESTARTABLE_ERROR:
+            print_err("NlsSpeechRecognizer fatal error", self.error)
+        else:
+            print_err("NlsSpeechRecognizer unknown error")
+
         print_log("on_error args=>{} message=>{}".format(
             args, message))
 
@@ -96,14 +120,23 @@ class recognizer(QThread):
         print_log("audio data ready to send to worker", log_code.DEBUG)
         self.q.put(data)
 
+    def running_restart(self):
+        self.api.shutdown()
+
+        if not self.api.start(aformat="pcm",
+                              enable_punctutation_prediction=True,
+                              enable_inverse_text_normalization=True):
+            print_err("Running restart cant start recognizer API", self.error)
+        self.need_restart = False
+        self.count_restart += 1
+
     def run(self):
 
         print_log("Starting recognizer_worker")
 
         if not self.api.start(aformat="pcm",
                               enable_punctutation_prediction=True,
-                              enable_inverse_text_normalization=True,
-                              timeout=60):
+                              enable_inverse_text_normalization=True):
             print_err("Cant start recognizer API", self.error)
 
         while not self.isInterruptionRequested():
@@ -111,6 +144,11 @@ class recognizer(QThread):
 
             if not buffer:
                 continue
+
+            if self.need_restart >= config.API_S2T_TRY_RESTART:
+                print_err("Max try to restart service reach", self.error)
+            if self.need_restart:
+                self.running_restart()
 
             slices = zip(*(iter(buffer),) * 640)
             for i in slices:

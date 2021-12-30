@@ -28,6 +28,7 @@ from PyQt5.QtCore import pyqtSignal
 
 import config
 from utils import log_code
+from utils import print_err
 from utils import print_log
 
 
@@ -64,11 +65,13 @@ class translator(QThread):
 
     def run(self):
 
-        output = dict()
         while not self.isInterruptionRequested():
             text = self.q.get()
 
             if not text:
+                continue
+            if len(text) > config.API_TRANS_MAX_TEXT:
+                print_err("Max lenght of text reach.")
                 continue
 
             for i in range(0, len(self.lang_trg)):
@@ -87,9 +90,9 @@ class translator(QThread):
                               text + " Code: " + result["Code"], log_code.ERROR, self.error)
                     return ""
 
-                output[self.lang_trg[i]] = str(result["Data"]["Translated"])
+                translated = str(result["Data"]["Translated"])
 
                 print_log("Translated to " + self.lang_src +
-                          "->" + self.lang_trg[i] + " text: " + output[self.lang_trg[i]])
+                          "->" + self.lang_trg[i] + " text: " + translated)
 
-                self.result.emit(self.lang_trg[i], output[self.lang_trg[i]])
+                self.result.emit(self.lang_trg[i], translated)
