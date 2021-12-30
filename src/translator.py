@@ -27,7 +27,8 @@ from PyQt5.QtCore import QThread
 from PyQt5.QtCore import pyqtSignal
 
 import config
-from utils import log_code, print_log
+from utils import log_code
+from utils import print_log
 
 
 class translator(QThread):
