@@ -15,12 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
+
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QTabWidget
+
 import config
 from play_widget import play_widget
 from settings_widget import settings_widget
 from utils import print_log
-
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QTabWidget)
 
 
 class mainwindow(QMainWindow):

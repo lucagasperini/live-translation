@@ -15,16 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
-from logging import DEBUG
-import config
-from utils import log_code, print_log
-from queue import Queue
-import time
 
-import nls
+from queue import Queue
 import json
 
 from PyQt5.QtCore import QThread, pyqtSignal
+
+import nls
+
+import config
+from utils import log_code
+from utils import print_log
 
 NLS_URL = "wss://nls-gateway.cn-shanghai.aliyuncs.com/ws/v1"
 NLS_STATUS_OK = 20000000

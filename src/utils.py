@@ -15,18 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
-import config
-
 import datetime
-import wave
 import enum
 import os
 
+import wave
 
-THREAD_TIMEOUT = 100
-
+import config
 
 # NOTE: No more used
+
+
 def in_range_16bit(items, data, delta):
     for i in range(0, items - 2, 2):
         if min(data[i], data[i+1]) > delta and max(data[i], data[i+1]) < 255 - delta:
@@ -81,6 +80,6 @@ def print_log(text="", code=log_code.LOG, qsignal=None, verbose=False, file=""):
 
 
 def want_terminate_thread(thread):
-    if not thread.wait(THREAD_TIMEOUT):
+    if not thread.wait(config.APP_THREAD_TIMEOUT):
         thread.terminate()
         thread.wait()

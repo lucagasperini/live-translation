@@ -27,6 +27,10 @@ APP_JS_FILENAME = "livetranslation.js"
 APP_NAME = "livetranslation"
 APP_VERSION = "1.0.0"
 APP_DISPLAYNAME = "Live Translation"
+APP_THREAD_TIMEOUT = 100
+
+WIDGET_PASSWORD_TEXT = "SECRET_PASSWORD"
+
 
 APP_HTML_FILE_CONTENT = """<!DOCTYPE html>
 <html>

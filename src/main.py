@@ -15,19 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
-from mainwindow import mainwindow
-import config
-from utils import print_log, log_code
-
-
 import sys
-import os
-import PyQt5
-from PyQt5 import QtGui, QtCore, Qt
-from PyQt5.QtWidgets import QApplication, QDialogButtonBox, QMessageBox
-from PyQt5.QtCore import QDir, QCommandLineOption, QCommandLineParser
 
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtCore import QCommandLineOption
+from PyQt5.QtCore import QCommandLineParser
+
+import config
 from lock import lock_file
+from mainwindow import mainwindow
+from utils import print_log
+from utils import log_code
 
 
 def main():

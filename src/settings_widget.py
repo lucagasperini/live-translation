@@ -15,14 +15,26 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
-from recording import recording
-import config
-from utils import print_log, want_terminate_thread
-from checkable_cbox import CheckableComboBox
-from languages import get_lang_names, get_lang_codes, get_lang_by_name, get_lang_by_code
-from PyQt5.QtWidgets import QLineEdit, QVBoxLayout, QLabel, QWidget, QComboBox, QApplication, QPushButton, QSpinBox, QDoubleSpinBox
 
-SECRET_PASSWORD = "SECRET_PASSWORD"
+from PyQt5.QtWidgets import QLineEdit
+from PyQt5.QtWidgets import QVBoxLayout
+from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QComboBox
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QPushButton
+from PyQt5.QtWidgets import QSpinBox
+from PyQt5.QtWidgets import QDoubleSpinBox
+
+import config
+from recording import recording
+
+from utils import print_log
+from utils import want_terminate_thread
+from checkable_cbox import CheckableComboBox
+from languages import get_lang_names
+from languages import get_lang_by_name
+from languages import get_lang_by_code
 
 
 class settings_widget(QWidget):
@@ -156,13 +168,19 @@ class settings_widget(QWidget):
         self.port_num.setValue(config.http_port)
         self.refresh_num.setValue(config.http_refresh)
 
-        self.s2t_akid_line.setText(SECRET_PASSWORD)
-        self.s2t_aksecret_line.setText(SECRET_PASSWORD)
-        self.s2t_appkey_line.setText(SECRET_PASSWORD)
+        if config.api_s2t_akid != "":
+            self.s2t_akid_line.setText(config.WIDGET_PASSWORD_TEXT)
+        if config.api_s2t_aksecret != "":
+            self.s2t_aksecret_line.setText(config.WIDGET_PASSWORD_TEXT)
+        if config.api_s2t_appkey != "":
+            self.s2t_appkey_line.setText(config.WIDGET_PASSWORD_TEXT)
 
-        self.trans_akid_line.setText(SECRET_PASSWORD)
-        self.trans_aksecret_line.setText(SECRET_PASSWORD)
-        self.trans_appkey_line.setText(SECRET_PASSWORD)
+        if config.api_trans_akid != "":
+            self.trans_akid_line.setText(config.WIDGET_PASSWORD_TEXT)
+        if config.api_trans_aksecret != "":
+            self.trans_aksecret_line.setText(config.WIDGET_PASSWORD_TEXT)
+        if config.api_trans_appkey != "":
+            self.trans_appkey_line.setText(config.WIDGET_PASSWORD_TEXT)
 
         self.device_cbox.currentIndexChanged.connect(self.device_cbox_changed)
         self.sentence_limit_num.valueChanged.connect(

@@ -15,18 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
-import config
-from utils import log_code, print_log
+import json
+from queue import Queue
 
 from aliyunsdkcore.client import AcsClient
 from aliyunsdkcore.acs_exception.exceptions import ClientException
 from aliyunsdkcore.acs_exception.exceptions import ServerException
 from aliyunsdkalimt.request.v20181012 import TranslateGeneralRequest
 
-from PyQt5.QtCore import QThread, pyqtSignal
-from queue import Queue
+from PyQt5.QtCore import QThread
+from PyQt5.QtCore import pyqtSignal
 
-import json
+import config
+from utils import log_code, print_log
 
 
 class translator(QThread):

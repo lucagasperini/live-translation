@@ -15,13 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
-from logging import DEBUG
-from utils import print_err, print_log, log_code
-
 import pyaudio
 
+from PyQt5.QtCore import QThread
+from PyQt5.QtCore import pyqtSignal
 
-from PyQt5.QtCore import QThread, pyqtSignal
+from utils import print_log
+from utils import log_code
 
 CHUNK = 1024
 CHANNELS = 1

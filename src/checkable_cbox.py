@@ -17,11 +17,15 @@
 
 # FROM https://gis.stackexchange.com/questions/350148/qcombobox-multiple-selection-pyqt5
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QComboBox
+from PyQt5.QtWidgets import qApp
+from PyQt5.QtWidgets import QStyledItemDelegate
 
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
+from PyQt5.QtGui import QStandardItem
+from PyQt5.QtGui import QPalette
+
 from PyQt5.QtCore import QEvent
+from PyQt5.QtCore import Qt
 
 
 class CheckableComboBox(QComboBox):

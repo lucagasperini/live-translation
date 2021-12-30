@@ -19,11 +19,14 @@
 # This file is not used anymore!
 ###
 
-from utils import print_log
-from multiprocessing import Process, Queue
+
+from multiprocessing import Process
+from multiprocessing import Queue
 
 import http.server
 from http import HTTPStatus
+
+from utils import print_log
 
 http_handler_queue = Queue()
 http_worker = None
