@@ -115,7 +115,6 @@ class play_widget(QWidget):
             QApplication.translate(config.APP_I18N, "Stop recording"))
 
     def stop_recording(self):
-
         self.recording_worker.stop()
         self.recognizer_worker.stop()
         self.translator_worker.stop()
@@ -140,7 +139,8 @@ class play_widget(QWidget):
     def audio_recording(self, data):
         self.recognizer_worker.data_ready(data)
 
-    def write_sentence_translated(self, lang, text):
+    def write_sentence_translated(self, pair):
+        lang, text = pair
         is_new_sentence = True
         for i in self.sentences:
             if i.get(lang) == None:

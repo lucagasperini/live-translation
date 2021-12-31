@@ -32,18 +32,13 @@ from utils import log_code
 from utils import print_err
 from utils import print_log
 
+from thread_controller import thread_controller
+
 
 # Documentation at https://help.aliyun.com/document_detail/158244.html
-class translator(QObject):
-    result = pyqtSignal(str, str)
-    error = pyqtSignal(str)
-
+class translator(thread_controller):
     def __init__(self, parent=None):
-        super(__class__, self).__init__(parent)
-        self.q = Queue(config.APP_QUEUE_MAX)
-        self.client = None
-        self.lang_src = "zh"
-        self.lang_trg = ["en"]
+        super(__class__, self).__init__("translator", True, parent)
 
     def start(self, lang_src, lang_trg):
         self.lang_src = lang_src
@@ -55,40 +50,7 @@ class translator(QObject):
             config.api_trans_appkey
         )
 
-        self.t = threading.Thread(target=self.run)
-        self.t.daemon = True
-        self.t.name = "translator"
-        self.is_interrupt = False
-
-        self.t.start()
-
-    def stop(self):
-        self.is_interrupt = True
-
-    def join(self):
-        self.t.join()
-
-    def is_running(self):
-        try:
-            return self.t.is_alive()
-        except BaseException:
-            return False
-
-    def data_ready(self, data):
-        print_log("Text to translate ready to send to worker")
-        self.q.put(data)
-
-    def run(self):
-        print_log("Starting translator")
-
-        while not self.is_interrupt:
-            try:
-                text = self.q.get(block=True, timeout=config.APP_QUEUE_TIMEOUT)
-                self.loop(text)
-            except Exception as ex:
-                continue
-
-        print_log("Closing translator")
+        super(__class__, self).start()
 
     def loop(self, data):
         if len(data) > config.API_TRANS_MAX_TEXT:
@@ -122,4 +84,4 @@ class translator(QObject):
             print_log("Translated to " + self.lang_src +
                       "->" + self.lang_trg[i] + " text: " + translated)
 
-            self.result.emit(self.lang_trg[i], translated)
+            self.result.emit((self.lang_trg[i], translated))

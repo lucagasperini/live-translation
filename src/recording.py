@@ -26,6 +26,8 @@ from utils import print_err
 from utils import print_log
 from utils import log_code
 
+from thread_controller import thread_controller
+
 
 class audio_device():
     index = -1
@@ -43,18 +45,9 @@ class audio_device():
         return str(self.index) + ":" + self.name + ":" + str(self.channels) + ":" + str(self.rate)
 
 
-class recording(QObject):
-    result = pyqtSignal(bytes)
-    error = pyqtSignal(str)
-
+class recording(thread_controller):
     def __init__(self, parent=None):
-        super(__class__, self).__init__(parent)
-
-        self.pyaudio_obj = None
-        self.playback = False
-        self.device = 1
-        self.rate = 16000
-        self.depth = 2
+        super(__class__, self).__init__("recording", False, parent)
 
     def start(self, playback, device, rate, depth):
         self.playback = playback
@@ -62,24 +55,7 @@ class recording(QObject):
         self.rate = rate
         self.depth = depth
 
-        self.t = threading.Thread(target=self.run)
-        self.t.daemon = True
-        self.t.name = "recording"
-        self.is_interrupt = False
-
-        self.t.start()
-
-    def stop(self):
-        self.is_interrupt = True
-
-    def join(self):
-        self.t.join()
-
-    def is_running(self):
-        try:
-            return self.t.is_alive()
-        except BaseException:
-            return False
+        super(__class__, self).start()
 
     def get_microphone_device(self):
         devices = list()
@@ -107,19 +83,6 @@ class recording(QObject):
 
         return devices
 
-    def loop(self):
-        # read audio stream
-        # https://people.csail.mit.edu/hubert/pyaudio/docs/#pyaudio.Stream.read
-        datachunk = self.stream.read(config.AUDIO_CHUNK)
-
-        print_log("emit dynamic audio block", log_code.DEBUG)
-        self.result.emit(datachunk)
-
-        if self.playback:
-            # play back audio stream
-            # https://people.csail.mit.edu/hubert/pyaudio/docs/#pyaudio.Stream.write
-            self.stream.write(datachunk, config.AUDIO_CHUNK)
-
     def run(self):
 
         print_log("Init pyaudio.")
@@ -135,15 +98,7 @@ class recording(QObject):
                                        output=self.playback,
                                        frames_per_buffer=config.AUDIO_CHUNK)
 
-        print_log("start audio recording")
-
-        while not self.is_interrupt:
-            try:
-                self.loop()
-            except BaseException as err:
-                print_err("Failed audio recording!", self.error)
-
-        print_log("end audio recording")
+        super(__class__, self).run()
 
         # https://people.csail.mit.edu/hubert/pyaudio/docs/#pyaudio.Stream.stop_stream
         self.stream.stop_stream()
@@ -152,3 +107,16 @@ class recording(QObject):
         print_log("Close pyaudio.")
         # https://people.csail.mit.edu/hubert/pyaudio/docs/#pyaudio.PyAudio.terminate
         pyaudio_obj.terminate()
+
+    def loop(self, data):
+        # read audio stream
+        # https://people.csail.mit.edu/hubert/pyaudio/docs/#pyaudio.Stream.read
+        datachunk = self.stream.read(config.AUDIO_CHUNK)
+
+        print_log("emit dynamic audio block", log_code.DEBUG)
+        self.result.emit(datachunk)
+
+        if self.playback:
+            # play back audio stream
+            # https://people.csail.mit.edu/hubert/pyaudio/docs/#pyaudio.Stream.write
+            self.stream.write(datachunk, config.AUDIO_CHUNK)
