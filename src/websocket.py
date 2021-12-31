@@ -48,8 +48,7 @@ class websocket(QObject):
             self.html_file = html_file
 
         if js_file == "":
-            self.js_file = QDir.toNativeSeparators(os.path.dirname(os.path.abspath(
-                __file__)) + "/" + config.APP_JS_FILENAME)
+            self.js_file = config.dir_appdata + "/" + config.APP_JS_FILENAME
         else:
             self.js_file = js_file
 
@@ -57,6 +56,7 @@ class websocket(QObject):
         self.t.daemon = True
         self.t.name = "websocket"
         self.is_interrupt = False
+        self.lastdata = None
 
         self.t.start()
 
@@ -77,11 +77,15 @@ class websocket(QObject):
             try:
                 buffer = self.q.get(
                     block=True, timeout=config.APP_QUEUE_TIMEOUT)
-
-                await websocket.send(str(buffer))
-                await asyncio.sleep(self.refresh)
+                if buffer:
+                    self.lastdata = buffer
             except Exception as ex:
-                continue
+                pass
+            try:
+                await websocket.send(str(self.lastdata))
+            except websockets.exceptions.ConnectionClosed:
+                pass
+            await asyncio.sleep(self.refresh)
 
     def data_ready(self, data):
         self.q.put(data)
