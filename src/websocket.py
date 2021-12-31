@@ -78,11 +78,14 @@ class websocket(QObject):
 
     async def loop(self, websocket, path):
         while True:
-            buffer = self.q.get(block=True, timeout=config.APP_QUEUE_TIMEOUT)
-            if not buffer:
+            try:
+                buffer = self.q.get(
+                    block=True, timeout=config.APP_QUEUE_TIMEOUT)
+
+                await websocket.send(str(buffer))
+                await asyncio.sleep(self.refresh)
+            except Exception as ex:
                 continue
-            await websocket.send(str(buffer))
-            await asyncio.sleep(self.refresh)
 
     def data_ready(self, data):
         self.q.put(data)
