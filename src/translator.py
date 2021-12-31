@@ -59,29 +59,34 @@ class translator(thread_controller):
 
         print_log("Got text to translate: " + data)
 
-        for i in range(0, len(self.lang_trg)):
-            print_log("Translating to " + self.lang_src +
-                      "->" + self.lang_trg[i] + " text: " + data)
-            request = TranslateGeneralRequest.TranslateGeneralRequest()
-            request.set_SourceText(data)
-            request.set_SourceLanguage(self.lang_src)
-            request.set_TargetLanguage(self.lang_trg[i])
-            request.set_FormatType("text")
-            request.set_method("POST")
-            try:
-                response = self.client.do_action_with_exception(request)
-            except BaseException as err:
-                print_err("Exception from translation", self.error)
+        for lang in self.lang_trg:
+            tmp_thread = threading.Thread(
+                target=self.call_translation, args=[lang, data])
+            tmp_thread.start()
 
-            result = json.loads(response)
-            if result["Code"] != "200":
-                print_log("Translating text: " +
-                          data + " Code: " + result["Code"], log_code.ERROR, self.error)
-                return ""
+    def call_translation(self, lang, text):
+        print_log("Translating to " + self.lang_src +
+                  "->" + lang + " text: " + text)
+        request = TranslateGeneralRequest.TranslateGeneralRequest()
+        request.set_SourceText(text)
+        request.set_SourceLanguage(self.lang_src)
+        request.set_TargetLanguage(lang)
+        request.set_FormatType("text")
+        request.set_method("POST")
+        try:
+            response = self.client.do_action_with_exception(request)
+        except BaseException as err:
+            print_err("Exception from translation", self.error)
 
-            translated = str(result["Data"]["Translated"])
+        result = json.loads(response)
+        if result["Code"] != "200":
+            print_log("Translating text: " +
+                      text + " Code: " + result["Code"], log_code.ERROR, self.error)
+            return ""
 
-            print_log("Translated to " + self.lang_src +
-                      "->" + self.lang_trg[i] + " text: " + translated)
+        translated = str(result["Data"]["Translated"])
 
-            self.result.emit((self.lang_trg[i], translated))
+        print_log("Translated to " + self.lang_src +
+                  "->" + lang + " text: " + translated)
+
+        self.result.emit((lang, translated))

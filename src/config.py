@@ -57,6 +57,8 @@ APP_HTML_FILE_CONTENT = """<!DOCTYPE html>
 verbose = False
 # log file path
 log_file = ""
+# log timestamp in stdout
+log_stdout_time = False
 # log file max size (1048576 = 1 MiB)
 log_size = 1048576
 # log verbosity level [DEBUG/LOG/INFO/ERROR]
@@ -143,6 +145,8 @@ def config_load(arg_config_file="", arg_verbose=False, arg_log_file=""):
     else:
         log_file = arg_log_file
 
+    global log_stdout_time
+    log_stdout_time = bool(qsettings.value("log_stdout_time", log_stdout_time))
     global log_size
     log_size = int(qsettings.value("log_size", log_size))
     global log_level
@@ -197,6 +201,7 @@ def config_save(config_file=""):
     qsettings.setValue("verbose", verbose)
     # NOTE: this value is overrided by application argument
     qsettings.setValue("log_file", log_file)
+    qsettings.setValue("log_stdout_time", log_stdout_time)
     qsettings.setValue("log_size", log_size)
     qsettings.setValue("log_level", log_level)
     qsettings.setValue("audio_dev", audio_dev)

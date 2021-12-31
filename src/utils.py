@@ -53,7 +53,11 @@ def print_log(text, code=log_code.LOG, qsignal=None, verbose=False, file=""):
         return
 
     if verbose == True or config.verbose == True:
-        print(msg)
+        if config.log_stdout_time:
+            print("[" + str(datetime.datetime.now()) + "]" + msg)
+        else:
+            print(msg)
+
     if file == "" and config.log_file != "":
         file = config.log_file
 
