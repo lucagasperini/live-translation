@@ -43,7 +43,7 @@ class websocket(QObject):
         self.refresh = refresh
         if html_file == "":
             self.html_file = QDir.toNativeSeparators(
-                QDir.tempPath() + "/" + config.APP_HTML_FILENAME)
+                config.dir_appdata + "/" + config.APP_HTML_FILENAME)
         else:
             self.html_file = html_file
 

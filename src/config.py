@@ -18,7 +18,10 @@
 # This file is a standard python config file
 # https://docs.python.org/3/faq/programming.html#how-do-i-share-global-variables-across-modules
 
+import os
+
 from PyQt5.QtCore import QSettings
+from PyQt5.QtCore import QStandardPaths
 
 APP_SETTINGS_FILENAME = "livetranslation.ini"
 APP_LOCK_FILENAME = "livetranslation.lock"
@@ -80,7 +83,7 @@ api_trans_appkey = ""
 # https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
 http_port = 3333
 # http client data refresh rate
-http_refresh = 1
+http_refresh = 0.01
 # path where create a html file for open javascript file
 html_file = ""
 # path of javascript file for open websocket client
@@ -101,7 +104,10 @@ win_w = 540
 win_h = 960
 
 
-def config_open(self, config_file=""):
+dir_appdata = ""
+
+
+def config_open(config_file=""):
     # NOTE: Only if file exists? or we can allow to create new files?
     # if config_file and os.path.exists(config_file):
     if config_file:
@@ -110,7 +116,18 @@ def config_open(self, config_file=""):
         return QSettings(APP_SETTINGS_FILENAME, QSettings.IniFormat)
 
 
+def directory_setup():
+    global dir_appdata
+    dir_appdata = QStandardPaths.writableLocation(
+        QStandardPaths.StandardLocation.AppDataLocation)
+
+    if not os.path.exists(dir_appdata):
+        os.makedirs(dir_appdata)
+
+
 def config_load(arg_config_file="", arg_verbose=False, arg_log_file=""):
+
+    directory_setup()
 
     qsettings = config_open(arg_config_file)
 

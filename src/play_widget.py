@@ -15,11 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import json
 
-#import urllib.request
+# import urllib.request
 
-#from PyQt5.QtCore import QTimer
+# from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QApplication
@@ -27,7 +28,8 @@ from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QTextEdit
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QLineEdit
-from PyQt5.QtWidgets import QStyle
+from PyQt5.QtWidgets import QHBoxLayout
+from PyQt5.QtGui import QClipboard, QGuiApplication
 
 import config
 from recording import recording
@@ -73,14 +75,23 @@ class play_widget(QWidget):
 
         self.html_file_label = QLabel(QApplication.translate(
             config.APP_I18N, "HTML file"))
+        html_file_layout = QHBoxLayout()
+
         self.html_file_line = QLineEdit()
         self.html_file_line.setReadOnly(True)
+
+        self.html_copy_btn = QPushButton()
+        self.html_copy_btn.setText(QApplication.translate(
+            config.APP_I18N, "Copy"))
+
+        html_file_layout.addWidget(self.html_file_line)
+        html_file_layout.addWidget(self.html_copy_btn)
 
         layout.addWidget(self.play_btn)
         layout.addWidget(self.play_text)
         layout.addWidget(self.play_trans)
         layout.addWidget(self.html_file_label)
-        layout.addWidget(self.html_file_line)
+        layout.addLayout(html_file_layout)
 
         self.setLayout(layout)
 
@@ -105,7 +116,9 @@ class play_widget(QWidget):
 
         self.websocket_worker.error.connect(self.translator_error)
 
-        #self.html_page_timer = QTimer(self)
+        self.html_copy_btn.clicked.connect(self.html_copy_btn_clicked)
+
+        # self.html_page_timer = QTimer(self)
         # self.html_page_timer.timeout.connect(self.update_html_page)
 
     def tab_changed(self):
@@ -133,7 +146,7 @@ class play_widget(QWidget):
 
         self.html_file_line.setText(self.websocket_worker.html_file)
 
-        #self.html_page_timer.start(int(config.http_refresh * 1000))
+        # self.html_page_timer.start(int(config.http_refresh * 1000))
 
         self.play_btn.setText(
             QApplication.translate(config.APP_I18N, "Stop recording"))
@@ -152,6 +165,11 @@ class play_widget(QWidget):
             self.start_recording()
         else:
             self.stop_recording()
+
+    def html_copy_btn_clicked(self):
+        if self.html_file_line.text():
+            abs_path = os.path.dirname(self.html_file_line.text())
+            QGuiApplication.clipboard().setText(abs_path)
 
     def write_sentence(self, text):
         self.play_text.setText(text)
