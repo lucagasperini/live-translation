@@ -122,10 +122,6 @@ class play_widget(QWidget):
         self.play_btn.setText(QApplication.translate(
             config.APP_I18N, "Start recording"))
 
-        self.recording_worker.join()
-        self.recognizer_worker.join()
-        self.translator_worker.join()
-
     def play_btn_clicked(self):
         if not self.recording_worker.is_running():
             self.start_recording()

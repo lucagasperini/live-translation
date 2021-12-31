@@ -41,8 +41,7 @@ class thread_controller(QObject):
 
     def start(self):
         if self.is_running():
-            print_err("Trying to start a thread already started", self.error)
-            return
+            self.join()
 
         self.t = threading.Thread(target=self.run)
         self.t.daemon = True
@@ -55,6 +54,7 @@ class thread_controller(QObject):
         self.is_interrupt = True
 
     def join(self):
+        print_log("Join thread " + self.name)
         self.t.join()
 
     def is_running(self):
