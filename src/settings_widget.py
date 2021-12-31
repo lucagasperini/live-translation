@@ -39,8 +39,10 @@ from languages import get_lang_by_code
 
 class settings_widget(QWidget):
 
-    def __init__(self, parent=None):
+    def __init__(self, tabid, parent=None):
         super(__class__, self).__init__(parent)
+
+        self.tabid = tabid
 
         self.IndexWidgetCentralWidget = QWidget(self)
         self.MainLayout = layout = QVBoxLayout()
@@ -205,6 +207,12 @@ class settings_widget(QWidget):
         self.trans_appkey_line.textChanged.connect(
             self.trans_appkey_line_changed)
 
+    def tab_changed(self):
+        self.stop_recording()
+
+    def close_event(self):
+        self.stop_recording()
+
     def init_device_list(self):
         devices = self.recording_worker.get_microphone_device()
         for i in range(len(devices)):
@@ -226,7 +234,6 @@ class settings_widget(QWidget):
         self.recording_worker.stop()
         self.test_btn.setText(
             QApplication.translate(config.APP_I18N, "Test Microphone"))
-        self.recording_worker.join()
 
     def test_device(self):
         if not self.recording_worker.is_running():

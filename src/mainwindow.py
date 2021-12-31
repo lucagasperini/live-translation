@@ -56,18 +56,29 @@ class mainwindow(QMainWindow):
 
         self.tabman = QTabWidget(self)
 
-        self.play_tab = play_widget(self.tabman)
-        self.settings_tab = settings_widget(self.tabman)
+        self.play_tab = play_widget(0, self.tabman)
+        self.settings_tab = settings_widget(1, self.tabman)
 
-        self.tabman.addTab(self.play_tab, "Tab")
-        self.tabman.setTabText(0, "Play")
+        self.tabman.insertTab(self.play_tab.tabid, self.play_tab, "Play")
 
-        self.tabman.addTab(self.settings_tab, "Settings")
-        self.tabman.setTabText(1, "Settings")
+        self.tabman.insertTab(self.settings_tab.tabid,
+                              self.settings_tab, "Settings")
+
+        self.tabman.currentChanged.connect(self.tab_changed)
 
         self.setCentralWidget(self.tabman)
 
-    def closeEvent(self, event) -> None:
+    def tab_changed(self, index_new):
+        index = index_new
+        # NOTE: little workaround here, cant get old index safely?
+        if index != self.play_tab.tabid:
+            self.play_tab.tab_changed()
+        elif index != self.settings_tab.tabid:
+            self.settings_tab.tab_changed()
+
+    def closeEvent(self, event):
+        self.play_tab.close_event()
+        self.settings_tab.close_event()
         config.win_x = self.geometry().x()
         config.win_y = self.geometry().y()
         event.accept()

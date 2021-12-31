@@ -35,7 +35,7 @@ from websocket import websocket
 
 class play_widget(QWidget):
 
-    def __init__(self, parent=None):
+    def __init__(self, tabid, parent=None):
         super(__class__, self).__init__(parent)
 
         self.recognizer_worker = None
@@ -43,6 +43,7 @@ class play_widget(QWidget):
         self.translator_worker = None
         self.websocket_worker = None
         self.sentences = []
+        self.tabid = tabid
 
         self.IndexWidgetCentralWidget = QWidget(self)
         self.MainLayout = layout = QVBoxLayout()
@@ -95,6 +96,16 @@ class play_widget(QWidget):
         self.websocket_worker = websocket()
 
         self.websocket_worker.error.connect(self.translator_error)
+
+    def tab_changed(self):
+        self.stop_recording()
+
+    def close_event(self):
+        self.stop_recording()
+
+        self.recording_worker.join()
+        self.recognizer_worker.join()
+        self.translator_worker.join()
 
     def start_recording(self):
         self.recording_worker.start(playback=False,
