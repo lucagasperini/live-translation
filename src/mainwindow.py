@@ -77,8 +77,12 @@ class mainwindow(QMainWindow):
             self.settings_tab.tab_changed()
 
     def closeEvent(self, event):
-        self.play_tab.close_event()
-        self.settings_tab.close_event()
+        try:
+            self.play_tab.close_event()
+            self.settings_tab.close_event()
+        except BaseException:
+            pass
+
         config.win_x = self.geometry().x()
         config.win_y = self.geometry().y()
         event.accept()

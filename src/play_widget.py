@@ -19,7 +19,7 @@ import json
 
 #import urllib.request
 
-from PyQt5.QtCore import QTimer
+#from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QApplication
@@ -27,6 +27,7 @@ from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QTextEdit
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QLineEdit
+from PyQt5.QtWidgets import QStyle
 
 import config
 from recording import recording
@@ -60,11 +61,15 @@ class play_widget(QWidget):
         self.play_text.setText(QApplication.translate(
             config.APP_I18N, "Text sentence here!"))
         self.play_text.setReadOnly(True)
+        self.play_text.setStyleSheet(
+            "QTextEdit { font-size:32px; }")
 
         self.play_trans = QTextEdit(self)
         self.play_trans.setText(QApplication.translate(
             config.APP_I18N, "Translated text here!"))
         self.play_trans.setReadOnly(True)
+        self.play_trans.setStyleSheet(
+            "QTextEdit { font-size:32px; }")
 
         self.html_file_label = QLabel(QApplication.translate(
             config.APP_I18N, "HTML file"))
