@@ -71,6 +71,8 @@ def main():
 
     if parser.isSet(opt_log_file):
         arg_log_file = parser.value(opt_log_file)
+    else:
+        arg_log_file = ""
 
     config.config_load(arg_config_file, arg_verbose, arg_log_file)
 
