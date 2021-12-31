@@ -15,10 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
-from os import error
+import threading
 import pyaudio
 
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal
 
 import config
@@ -43,7 +43,7 @@ class audio_device():
         return str(self.index) + ":" + self.name + ":" + str(self.channels) + ":" + str(self.rate)
 
 
-class recording(QThread):
+class recording(QObject):
     result = pyqtSignal(bytes)
     error = pyqtSignal(str)
 
@@ -56,11 +56,30 @@ class recording(QThread):
         self.rate = 16000
         self.depth = 2
 
-    def init(self, playback=False, device=1, rate=16000, depth=2):
+    def start(self, playback, device, rate, depth):
         self.playback = playback
         self.device = device
         self.rate = rate
         self.depth = depth
+
+        self.t = threading.Thread(target=self.run)
+        self.t.daemon = True
+        self.t.name = "recording"
+        self.is_interrupt = False
+
+        self.t.start()
+
+    def stop(self):
+        self.is_interrupt = True
+
+    def join(self):
+        self.t.join()
+
+    def is_running(self):
+        try:
+            return self.t.is_alive()
+        except BaseException:
+            return False
 
     def get_microphone_device(self):
         devices = list()
@@ -105,7 +124,7 @@ class recording(QThread):
 
         print_log("start audio recording")
 
-        while not self.isInterruptionRequested():
+        while not self.is_interrupt:
 
             try:
                 # read audio stream

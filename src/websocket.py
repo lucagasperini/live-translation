@@ -18,19 +18,20 @@
 
 import os
 import asyncio
+import threading
 from queue import Queue
 
 import websockets
 
 from PyQt5.QtCore import QDir
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import QObject
 
 import config
 from utils import print_log
 
 
-class websocket(QThread):
+class websocket(QObject):
     error = pyqtSignal(str)
 
     def __init__(self, parent=None):
@@ -41,7 +42,7 @@ class websocket(QThread):
         self.js_file = ""
         self.refresh = 1
 
-    def init(self, port, refresh, html_file="", js_file=""):
+    def start(self, port, refresh, html_file="", js_file=""):
         self.port = port
         self.refresh = refresh
         if html_file == "":
@@ -56,9 +57,28 @@ class websocket(QThread):
         else:
             self.js_file = js_file
 
+        self.t = threading.Thread(target=self.run)
+        self.t.daemon = True
+        self.t.name = "websocket"
+        self.is_interrupt = False
+
+        self.t.start()
+
+    def stop(self):
+        self.is_interrupt = True
+
+    def join(self):
+        self.t.join()
+
+    def is_running(self):
+        try:
+            return self.t.is_alive()
+        except BaseException:
+            return False
+
     async def loop(self, websocket, path):
         while True:
-            buffer = self.q.get()
+            buffer = self.q.get(block=True, timeout=config.APP_QUEUE_TIMEOUT)
             if not buffer:
                 continue
             await websocket.send(str(buffer))

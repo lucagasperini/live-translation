@@ -16,10 +16,12 @@
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import threading
 from queue import Queue
 import json
 
-from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.QtCore import QObject
+from PyQt5.QtCore import pyqtSignal
 
 import nls
 
@@ -49,7 +51,7 @@ NOT_RESTARTABLE_ERROR = [NLS_OVERLOAD, NLS_CLIENT_TOOFAST]
 # Documentation at https://help.aliyun.com/document_detail/374322.html
 
 
-class recognizer(QThread):
+class recognizer(QObject):
 
     result = pyqtSignal(str)
     error = pyqtSignal(str)
@@ -61,7 +63,7 @@ class recognizer(QThread):
         self.count_restart = 0
         self.api = None
 
-    def init(self, akid="", aksecret="", appkey=""):
+    def start(self, akid, aksecret, appkey):
         self.api = nls.NlsSpeechTranscriber(
             url=NLS_URL,
             akid=akid,
@@ -74,7 +76,26 @@ class recognizer(QThread):
             on_error=self.on_error,
             on_close=self.on_close
         )
-        print_log("Init recognizer")
+
+        self.t = threading.Thread(target=self.run)
+        self.t.daemon = True
+        self.t.name = "recognizer"
+        self.is_interrupt = False
+
+        # nls.enableTrace(True)
+        self.t.start()
+
+    def stop(self):
+        self.is_interrupt = True
+
+    def join(self):
+        self.t.join()
+
+    def is_running(self):
+        try:
+            return self.t.is_alive()
+        except BaseException:
+            return False
 
     def on_start(self, message, *args):
         msg = json.loads(message)
@@ -131,7 +152,6 @@ class recognizer(QThread):
         self.count_restart += 1
 
     def run(self):
-
         print_log("Starting recognizer")
 
         if not self.api.start(aformat="pcm",
@@ -139,27 +159,25 @@ class recognizer(QThread):
                               enable_inverse_text_normalization=True):
             print_err("Cant start recognizer API", self.error)
 
-        while not self.isInterruptionRequested():
-            buffer = self.q.get()
-
-            if not buffer:
+        while not self.is_interrupt:
+            try:
+                text = self.q.get(block=True, timeout=config.APP_QUEUE_TIMEOUT)
+                self.loop(text)
+            except Exception as ex:
                 continue
 
-            if self.need_restart >= config.API_S2T_TRY_RESTART:
-                print_err("Max try to restart service reach", self.error)
-            if self.need_restart:
-                self.running_restart()
-
-            slices = zip(*(iter(buffer),) * 640)
-            for i in slices:
-                if not self.api.send_audio(bytes(i)):
-                    print_err("Sending audio data to recognizer", self.error)
-
-        print_log("Stoping recognition",
-                  log_code.DEBUG if self.api.stop() else log_code.ERROR,
-                  self.error)
+        print_log("Stoping recognition")
+        self.api.stop()
 
         print_log("Closing recognizer")
 
-        if not self.api.shutdown():
-            print_err("Cant shutdown recognizer API")
+    def loop(self, data):
+        # if self.need_restart >= config.API_S2T_TRY_RESTART:
+        #    print_err("Max try to restart service reach", self.error)
+        # if self.need_restart:
+        #    self.running_restart()
+
+        slices = zip(*(iter(data),) * 640)
+        for i in slices:
+            if not self.api.send_audio(bytes(i)):
+                print_err("Sending audio data to recognizer", self.error)

@@ -27,8 +27,8 @@ APP_JS_FILENAME = "livetranslation.js"
 APP_NAME = "livetranslation"
 APP_VERSION = "1.0.0"
 APP_DISPLAYNAME = "Live Translation"
-APP_THREAD_TIMEOUT = 100
 APP_QUEUE_MAX = 0
+APP_QUEUE_TIMEOUT = 0.1
 APP_I18N = "i18n"
 
 API_S2T_TRY_RESTART = 10

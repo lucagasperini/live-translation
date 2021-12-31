@@ -42,7 +42,7 @@ class log_code(enum.Enum):
     ERROR = 3
 
 
-def print_log(text="", code=log_code.LOG, qsignal=None, verbose=False, file=""):
+def print_log(text, code=log_code.LOG, qsignal=None, verbose=False, file=""):
 
     if code == log_code.ERROR and qsignal != None:
         qsignal.emit(text)
@@ -72,12 +72,6 @@ def print_log(text="", code=log_code.LOG, qsignal=None, verbose=False, file=""):
 
 def print_err(text="", qsignal=None, file=""):
     print_log(text, log_code.ERROR, qsignal, True, file)
-
-
-def want_terminate_thread(thread):
-    if not thread.wait(config.APP_THREAD_TIMEOUT):
-        thread.terminate()
-        thread.wait()
 
 
 def show_critical_error(title="", text="", parent=None):

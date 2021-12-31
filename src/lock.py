@@ -27,7 +27,6 @@ from utils import print_log
 
 
 class lock_file():
-    file = ""
 
     def __init__(self, file=""):
         if file == "":

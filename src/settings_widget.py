@@ -30,7 +30,6 @@ import config
 from recording import recording
 
 from utils import print_log
-from utils import want_terminate_thread
 from utils import show_critical_error
 from checkable_cbox import CheckableComboBox
 from languages import get_lang_names
@@ -214,30 +213,29 @@ class settings_widget(QWidget):
                 self.device_cbox.setCurrentIndex(i)
 
     def start_recording(self):
-        self.recording_worker.init(
+        # FIXME: cant start if play window recording is active
+        self.recording_worker.start(
             playback=True,
             device=config.audio_dev,
             rate=config.audio_rate,
             depth=config.audio_depth)
-        self.recording_worker.start()
         self.test_btn.setText(QApplication.translate(
             config.APP_I18N, "Test Stop"))
 
     def stop_recording(self):
-        self.recording_worker.requestInterruption()
+        self.recording_worker.stop()
         self.test_btn.setText(
             QApplication.translate(config.APP_I18N, "Test Microphone"))
-
-        want_terminate_thread(self.recording_worker)
+        self.recording_worker.join()
 
     def test_device(self):
-        if not self.recording_worker.isRunning():
+        if not self.recording_worker.is_running():
             self.start_recording()
         else:
             self.stop_recording()
 
     def device_cbox_changed(self, value):
-        if self.recording_worker.isRunning():
+        if self.recording_worker.is_running():
             self.stop_recording()
 
         current_device = self.device_cbox.itemText(value)

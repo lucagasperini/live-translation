@@ -29,7 +29,6 @@ import config
 from recording import recording
 from translator import translator
 from recognizer import recognizer
-from utils import want_terminate_thread
 from utils import show_critical_error
 from websocket import websocket
 
@@ -98,45 +97,38 @@ class play_widget(QWidget):
         self.websocket_worker.error.connect(self.translator_error)
 
     def start_recording(self):
-        self.recording_worker.init(playback=False,
-                                   device=config.audio_dev,
-                                   rate=config.audio_rate,
-                                   depth=config.audio_depth)
-        self.recording_worker.start()
+        self.recording_worker.start(playback=False,
+                                    device=config.audio_dev,
+                                    rate=config.audio_rate,
+                                    depth=config.audio_depth)
+        self.recognizer_worker.start(akid=config.api_s2t_akid,
+                                     aksecret=config.api_s2t_aksecret,
+                                     appkey=config.api_s2t_appkey)
+        self.translator_worker.start(config.lang_src, config.lang_trg)
 
-        self.recognizer_worker.init(akid=config.api_s2t_akid,
-                                    aksecret=config.api_s2t_aksecret,
-                                    appkey=config.api_s2t_appkey)
-        self.recognizer_worker.start()
+        if not self.websocket_worker.is_running():
+            self.websocket_worker.start(config.http_port, config.http_refresh)
 
-        self.translator_worker.init(
-            config.lang_src, config.lang_trg)
-        self.translator_worker.start()
-
-        self.websocket_worker.init(
-            config.http_port, config.http_refresh)
         self.html_file_line.setText(self.websocket_worker.html_file)
-        if not self.websocket_worker.isRunning():
-            self.websocket_worker.start()
 
         self.play_btn.setText(
             QApplication.translate(config.APP_I18N, "Stop recording"))
 
     def stop_recording(self):
 
-        self.recording_worker.requestInterruption()
-        self.recognizer_worker.requestInterruption()
-        self.translator_worker.requestInterruption()
+        self.recording_worker.stop()
+        self.recognizer_worker.stop()
+        self.translator_worker.stop()
 
         self.play_btn.setText(QApplication.translate(
             config.APP_I18N, "Start recording"))
 
-        want_terminate_thread(self.recording_worker)
-        want_terminate_thread(self.recognizer_worker)
-        want_terminate_thread(self.translator_worker)
+        self.recording_worker.join()
+        self.recognizer_worker.join()
+        self.translator_worker.join()
 
     def play_btn_clicked(self):
-        if not self.recording_worker.isRunning():
+        if not self.recording_worker.is_running():
             self.start_recording()
         else:
             self.stop_recording()
