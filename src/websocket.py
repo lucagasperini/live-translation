@@ -93,8 +93,7 @@ class websocket(QObject):
 
     def create_html_file(self):
         fd = open(self.html_file, "w")
-        fd.write(config.APP_HTML_FILE_CONTENT.format(
-            config.APP_DISPLAYNAME, self.port))
+        fd.write(config.APP_HTML_FILE_CONTENT.format(str(self.port)))
         fd.close()
         print_log("Created html file in {}".format(self.html_file))
 

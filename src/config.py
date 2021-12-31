@@ -214,18 +214,18 @@ def config_save(config_file=""):
 
 APP_HTML_FILE_CONTENT = """<!DOCTYPE html>
 <html>
-<head><title>{}</title></head>
+<head><title>Live Translation</title></head>
 <body>
 <script>
 
 var ws = new WebSocket("ws://127.0.0.1:{}");
 
-ws.onmessage = function (event) {
+ws.onmessage = function (event) {{
     document.body.innerHTML = "";
     const data = JSON.parse(event.data);
     var count = 0;
-    data.forEach(sentence => {
-        Object.keys(sentence).forEach(translation => {
+    data.forEach(sentence => {{
+        Object.keys(sentence).forEach(translation => {{
             var msg_paragraph = document.createElement("p");
             msg = document.createTextNode(sentence[translation]);
             msg_paragraph.appendChild(msg);
@@ -233,10 +233,10 @@ ws.onmessage = function (event) {
             msg_paragraph.classList.add(translation);
             msg_paragraph.classList.add("sentence-".concat(count));
             document.body.appendChild(msg_paragraph);
-        });
+        }});
         count++;
-    });
-};
+    }});
+}};
 </script>
 </body>
 </html>"""
