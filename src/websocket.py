@@ -47,11 +47,6 @@ class websocket(QObject):
         else:
             self.html_file = html_file
 
-        if js_file == "":
-            self.js_file = config.dir_appdata + "/" + config.APP_JS_FILENAME
-        else:
-            self.js_file = js_file
-
         self.t = threading.Thread(target=self.run)
         self.t.daemon = True
         self.t.name = "websocket"
@@ -99,7 +94,7 @@ class websocket(QObject):
     def create_html_file(self):
         fd = open(self.html_file, "w")
         fd.write(config.APP_HTML_FILE_CONTENT.format(
-            config.APP_DISPLAYNAME, self.port, self.js_file))
+            config.APP_DISPLAYNAME, self.port))
         fd.close()
         print_log("Created html file in {}".format(self.html_file))
 

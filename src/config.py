@@ -26,7 +26,6 @@ from PyQt5.QtCore import QStandardPaths
 APP_SETTINGS_FILENAME = "livetranslation.ini"
 APP_LOCK_FILENAME = "livetranslation.lock"
 APP_HTML_FILENAME = "livetranslation.html"
-APP_JS_FILENAME = "livetranslation.js"
 APP_NAME = "livetranslation"
 APP_VERSION = "1.0.0"
 APP_DISPLAYNAME = "Live Translation"
@@ -41,16 +40,6 @@ AUDIO_CHUNK = 1024
 AUDIO_CHANNELS = 1
 
 WIDGET_PASSWORD_TEXT = "SECRET_PASSWORD"
-
-
-APP_HTML_FILE_CONTENT = """<!DOCTYPE html>
-<html>
-<head><title>{}</title></head>
-<body>
-<input style="display:none" type="text" id="port" value="{}" />
-<script src="{}"></script>
-</body>
-</html>"""
 
 
 # verbose output
@@ -176,8 +165,6 @@ def config_load(arg_config_file="", arg_verbose=False, arg_log_file=""):
     http_refresh = float(qsettings.value("http_refresh", http_refresh))
     global html_file
     html_file = qsettings.value("html_file", html_file)
-    global js_file
-    js_file = qsettings.value("js_file", js_file)
     global lang_src
     lang_src = qsettings.value("lang_src", lang_src)
     global lang_trg
@@ -216,7 +203,6 @@ def config_save(config_file=""):
     qsettings.setValue("http_port", http_port)
     qsettings.setValue("http_refresh", http_refresh)
     qsettings.setValue("html_file", html_file)
-    qsettings.setValue("js_file", js_file)
     qsettings.setValue("lang_src", lang_src)
     qsettings.setValue("lang_trg", ":".join(lang_trg))
     qsettings.setValue("sentence_limit", sentence_limit)
@@ -224,3 +210,33 @@ def config_save(config_file=""):
     qsettings.setValue("win_y", win_y)
     qsettings.setValue("win_w", win_w)
     qsettings.setValue("win_h", win_h)
+
+
+APP_HTML_FILE_CONTENT = """<!DOCTYPE html>
+<html>
+<head><title>{}</title></head>
+<body>
+<script>
+
+var ws = new WebSocket("ws://127.0.0.1:{}");
+
+ws.onmessage = function (event) {
+    document.body.innerHTML = "";
+    const data = JSON.parse(event.data);
+    var count = 0;
+    data.forEach(sentence => {
+        Object.keys(sentence).forEach(translation => {
+            var msg_paragraph = document.createElement("p");
+            msg = document.createTextNode(sentence[translation]);
+            msg_paragraph.appendChild(msg);
+            msg_paragraph.classList.add("livetranslation");
+            msg_paragraph.classList.add(translation);
+            msg_paragraph.classList.add("sentence-".concat(count));
+            document.body.appendChild(msg_paragraph);
+        });
+        count++;
+    });
+};
+</script>
+</body>
+</html>"""
