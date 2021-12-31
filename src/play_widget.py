@@ -17,6 +17,9 @@
 
 import json
 
+#import urllib.request
+
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QApplication
@@ -97,6 +100,9 @@ class play_widget(QWidget):
 
         self.websocket_worker.error.connect(self.translator_error)
 
+        #self.html_page_timer = QTimer(self)
+        # self.html_page_timer.timeout.connect(self.update_html_page)
+
     def tab_changed(self):
         self.stop_recording()
 
@@ -122,6 +128,8 @@ class play_widget(QWidget):
 
         self.html_file_line.setText(self.websocket_worker.html_file)
 
+        #self.html_page_timer.start(int(config.http_refresh * 1000))
+
         self.play_btn.setText(
             QApplication.translate(config.APP_I18N, "Stop recording"))
 
@@ -129,6 +137,7 @@ class play_widget(QWidget):
         self.recording_worker.stop()
         self.recognizer_worker.stop()
         self.translator_worker.stop()
+        # self.html_page_timer.stop()
 
         self.play_btn.setText(QApplication.translate(
             config.APP_I18N, "Start recording"))
@@ -145,6 +154,14 @@ class play_widget(QWidget):
 
     def audio_recording(self, data):
         self.recognizer_worker.data_ready(data)
+
+    # NOTE: It's a good idea?
+    # def update_html_page(self):
+    #    fp = urllib.request.urlopen("file:/" + self.websocket_worker.html_file)
+    #    html_page = fp.read().decode("utf8")
+    #    fp.close()
+
+    #    self.play_trans.document().setHtml(html_page)
 
     def write_sentence_translated(self, pair):
         lang, text = pair
@@ -163,8 +180,15 @@ class play_widget(QWidget):
         display_text = json.dumps(
             self.sentences, ensure_ascii=False).encode('utf8').decode()
 
-        self.play_trans.document().setPlainText(display_text)
         self.websocket_worker.data_ready(display_text)
+
+        textbox_text = ""
+        for sentence in self.sentences:
+            for lang in sentence:
+                textbox_text += sentence[lang] + "\n"
+            textbox_text += "\n"
+
+        self.play_trans.document().setPlainText(textbox_text)
 
     def recording_error(self, err):
         self.stop_recording()
