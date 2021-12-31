@@ -39,6 +39,7 @@ from thread_controller import thread_controller
 class translator(thread_controller):
     def __init__(self, parent=None):
         super(__class__, self).__init__("translator", True, parent)
+        self.tempResultDict = {}
 
     def start(self, lang_src, lang_trg):
         self.lang_src = lang_src
@@ -59,10 +60,21 @@ class translator(thread_controller):
 
         print_log("Got text to translate: " + data)
 
+        self.tempResultDict.clear()
         for lang in self.lang_trg:
             tmp_thread = threading.Thread(
                 target=self.call_translation, args=[lang, data])
+            self.tempResultDict[lang] = {
+                'thread': tmp_thread,
+                'result': None,
+            }
             tmp_thread.start()
+
+        for lang in self.lang_trg:
+            self.tempResultDict[lang]['thread'].join()
+
+        for lang in self.lang_trg:
+            self.result.emit((lang, self.tempResultDict[lang]['result']))
 
     def call_translation(self, lang, text):
         print_log("Translating to " + self.lang_src +
@@ -89,4 +101,5 @@ class translator(thread_controller):
         print_log("Translated to " + self.lang_src +
                   "->" + lang + " text: " + translated)
 
-        self.result.emit((lang, translated))
+        self.tempResultDict[lang]['result'] = translated
+        # self.result.emit((lang, translated))
