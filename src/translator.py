@@ -39,7 +39,6 @@ from thread_controller import thread_controller
 class translator(thread_controller):
     def __init__(self, parent=None):
         super(__class__, self).__init__("", True, parent)
-        self.tempResultDict = {}
 
     def start(self, lang_src, lang_trg):
         self.lang_src = lang_src
