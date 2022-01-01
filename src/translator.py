@@ -38,12 +38,14 @@ from thread_controller import thread_controller
 # Documentation at https://help.aliyun.com/document_detail/158244.html
 class translator(thread_controller):
     def __init__(self, parent=None):
-        super(__class__, self).__init__("translator", True, parent)
+        super(__class__, self).__init__("", True, parent)
         self.tempResultDict = {}
 
     def start(self, lang_src, lang_trg):
         self.lang_src = lang_src
         self.lang_trg = lang_trg
+
+        self.set_thread_name("translator-" + lang_trg)
 
         self.client = AcsClient(
             config.api_trans_akid,
@@ -60,46 +62,29 @@ class translator(thread_controller):
 
         print_log("Got text to translate: " + data)
 
-        self.tempResultDict.clear()
-        for lang in self.lang_trg:
-            tmp_thread = threading.Thread(
-                target=self.call_translation, args=[lang, data])
-            self.tempResultDict[lang] = {
-                'thread': tmp_thread,
-                'result': None,
-            }
-            tmp_thread.start()
-
-        for lang in self.lang_trg:
-            self.tempResultDict[lang]['thread'].join()
-
-        for lang in self.lang_trg:
-            self.result.emit((lang, self.tempResultDict[lang]['result']))
-
-    def call_translation(self, lang, text):
         print_log("Translating to " + self.lang_src +
-                  "->" + lang + " text: " + text)
+                  "->" + self.lang_trg + " text: " + data)
         request = TranslateGeneralRequest.TranslateGeneralRequest()
-        request.set_SourceText(text)
+        request.set_SourceText(data)
         request.set_SourceLanguage(self.lang_src)
-        request.set_TargetLanguage(lang)
+        request.set_TargetLanguage(self.lang_trg)
         request.set_FormatType("text")
         request.set_method("POST")
         try:
             response = self.client.do_action_with_exception(request)
         except BaseException as err:
-            print_err("Exception from translation", self.error)
-
+            print_err("""Exception from translation api:
+                        err:{err}
+                        trace:{traceback.fromat_exc()}""", self.error)
         result = json.loads(response)
         if result["Code"] != "200":
             print_log("Translating text: " +
-                      text + " Code: " + result["Code"], log_code.ERROR, self.error)
+                      data + " Code: " + result["Code"], log_code.ERROR, self.error)
             return ""
 
         translated = str(result["Data"]["Translated"])
 
         print_log("Translated to " + self.lang_src +
-                  "->" + lang + " text: " + translated)
+                  "->" + self.lang_trg + " text: " + translated)
 
-        self.tempResultDict[lang]['result'] = translated
-        # self.result.emit((lang, translated))
+        self.result.emit((self.lang_trg, translated))
