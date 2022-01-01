@@ -16,7 +16,7 @@
 # along with Live Translation.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-import threading
+import traceback
 from queue import Queue
 
 from aliyunsdkcore.client import AcsClient
@@ -72,10 +72,10 @@ class translator(thread_controller):
         request.set_method("POST")
         try:
             response = self.client.do_action_with_exception(request)
-        except BaseException as err:
+        except Exception as err:
             print_err("""Exception from translation api:
-                        err:{err}
-                        trace:{traceback.fromat_exc()}""", self.error)
+                        err:{}
+                        trace:{}""".format(err, traceback.format_exc()), self.error)
         result = json.loads(response)
         if result["Code"] != "200":
             print_log("Translating text: " +
