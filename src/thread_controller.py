@@ -30,13 +30,16 @@ class thread_controller(QObject):
     result = pyqtSignal(object)
     error = pyqtSignal(str)
 
-    def __init__(self, name, has_queue=False, parent=None):
+    def __init__(self, name="", has_queue=False, parent=None):
         super(__class__, self).__init__(parent)
         self.has_queue = has_queue
         if self.has_queue:
             # NOTE: You can add item if thread is not started
             self.q = Queue(config.APP_QUEUE_MAX)
         # NOTE: Is better use qt object name for this purporse? Rationale: No.
+        self.set_thread_name(name)
+
+    def set_thread_name(self, name):
         self.name = name
 
     def start(self):

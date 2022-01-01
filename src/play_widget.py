@@ -46,7 +46,7 @@ class play_widget(QWidget):
 
         self.recognizer_worker = None
         self.recording_worker = None
-        self.translator_worker = None
+        self.translator_worker_list = []
         self.websocket_worker = None
         self.sentences = []
         self.tabid = tabid
@@ -107,11 +107,6 @@ class play_widget(QWidget):
         self.recognizer_worker.result.connect(self.write_sentence)
         self.recognizer_worker.error.connect(self.recognizer_error)
 
-        self.translator_worker = translator()
-
-        self.translator_worker.result.connect(self.write_sentence_translated)
-        self.translator_worker.error.connect(self.translator_error)
-
         self.websocket_worker = websocket()
 
         self.websocket_worker.error.connect(self.translator_error)
@@ -121,6 +116,25 @@ class play_widget(QWidget):
         # self.html_page_timer = QTimer(self)
         # self.html_page_timer.timeout.connect(self.update_html_page)
 
+    def translator_worker_list_stop(self):
+        for worker in self.translator_worker_list:
+            worker.stop()
+
+    def translator_worker_list_join(self):
+        for worker in self.translator_worker_list:
+            worker.join()
+
+    def translator_worker_list_start(self):
+
+        for lang in config.lang_trg:
+            tmp_worker = translator()
+
+            tmp_worker.result.connect(self.write_sentence_translated)
+            tmp_worker.error.connect(self.translator_error)
+            tmp_worker.start(config.lang_src, lang)
+
+            self.translator_worker_list.append(tmp_worker)
+
     def tab_changed(self):
         self.stop_recording()
 
@@ -129,7 +143,7 @@ class play_widget(QWidget):
 
         self.recording_worker.join()
         self.recognizer_worker.join()
-        self.translator_worker.join()
+        self.translator_worker_list_join()
 
     def start_recording(self):
         self.recording_worker.start(playback=False,
@@ -139,7 +153,7 @@ class play_widget(QWidget):
         self.recognizer_worker.start(akid=config.api_s2t_akid,
                                      aksecret=config.api_s2t_aksecret,
                                      appkey=config.api_s2t_appkey)
-        self.translator_worker.start(config.lang_src, config.lang_trg)
+        self.translator_worker_list_start()
 
         if not self.websocket_worker.is_running():
             self.websocket_worker.start(config.http_port, config.http_refresh)
@@ -154,7 +168,7 @@ class play_widget(QWidget):
     def stop_recording(self):
         self.recording_worker.stop()
         self.recognizer_worker.stop()
-        self.translator_worker.stop()
+        self.translator_worker_list_stop()
         # self.html_page_timer.stop()
 
         self.play_btn.setText(QApplication.translate(
@@ -173,7 +187,8 @@ class play_widget(QWidget):
 
     def write_sentence(self, text):
         self.play_text.setText(text)
-        self.translator_worker.data_ready(text)
+        for worker in self.translator_worker_list:
+            worker.data_ready(text)
 
     def audio_recording(self, data):
         self.recognizer_worker.data_ready(data)
@@ -195,10 +210,22 @@ class play_widget(QWidget):
                 is_new_sentence = False
 
         if is_new_sentence:
-            self.sentences.append({lang: text})
+            tmp_dict = dict()
+            for i in config.lang_trg:
+                tmp_dict[i] = None
+
+            tmp_dict[lang] = text
+            self.sentences.append(tmp_dict)
 
         if len(self.sentences) > config.sentence_limit:
             self.sentences.pop(0)
+
+        # NOTE: There is surely a better way
+        # If there is a non traslated item, dont send
+        for sentence in self.sentences:
+            for language in sentence:
+                if sentence[language] == None:
+                    return
 
         display_text = json.dumps(
             self.sentences, ensure_ascii=False).encode('utf8').decode()
