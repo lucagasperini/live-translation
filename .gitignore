@@ -2,3 +2,6 @@
 *.log
 __pycache__/
 .vscode/
+*.spec
+build/
+dist/

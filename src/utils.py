@@ -18,6 +18,7 @@
 import datetime
 import enum
 import os
+import threading
 
 import wave
 
@@ -42,40 +43,63 @@ class log_code(enum.Enum):
     ERROR = 3
 
 
-def print_log(text, code=log_code.LOG, qsignal=None, verbose=False, file=""):
+def print_log_file(text, code, file):
 
-    if code == log_code.ERROR and qsignal != None:
-        qsignal.emit(text)
+    if os.path.exists(file):
+        if os.path.getsize(file) > config.log_size:
+            stream = open(file, "w", encoding="utf-8")
+        else:
+            stream = open(file, "a", encoding="utf-8")
+    else:
+        stream = open(file, "w", encoding="utf-8")
 
+    if config.log_thread_name == True:
+        msg = "{" + threading.current_thread().name + "} " + text
+
+    msg = "[" + code.name + "] " + msg
+    msg = "[" + str(datetime.datetime.now()) + "]" + msg
+
+    stream.write(msg + "\n")
+    stream.close()
+
+
+def print_log(text, code=log_code.LOG, verbose=False, file=""):
     if code.value >= log_code[config.log_level].value:
         msg = "[" + code.name + "] " + text
     else:
         return
 
+    if config.log_stdout_time:
+        msg = "[" + str(datetime.datetime.now()) + "]" + msg
+
     if verbose == True or config.verbose == True:
-        if config.log_stdout_time:
-            print("[" + str(datetime.datetime.now()) + "]" + msg)
-        else:
-            print(msg)
+        print(msg)
 
     if file == "" and config.log_file != "":
         file = config.log_file
 
     if file != "":
-        if os.path.exists(file):
-            if os.path.getsize(file) > config.log_size:
-                stream = open(file, "w", encoding="utf-8")
-            else:
-                stream = open(file, "a", encoding="utf-8")
-        else:
-            stream = open(file, "w", encoding="utf-8")
-
-        stream.write("[" + str(datetime.datetime.now()) + "]" + msg + "\n")
-        stream.close()
+        print_log_file(text, code, file)
 
 
-def print_err(text="", qsignal=None, file=""):
-    print_log(text, log_code.ERROR, qsignal, True, file)
+class error_reporting:
+    def __init__(self, text, id=None, critical=False):
+        self.text = text
+        self.id = id
+        self.critical = critical
+
+    def show(self, title="", parent=None):
+        show_critical_error(title, self.text, parent)
+
+
+def print_err(text="", qsignal=None, id=None, critical=False, file=""):
+    if qsignal != None:
+        qsignal.emit(error_reporting(text, id, critical))
+
+    if id:
+        text = f"({id}) {text}"
+
+    print_log(text, log_code.ERROR, True, file)
 
 
 def show_critical_error(title="", text="", parent=None):

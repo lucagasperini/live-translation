@@ -41,6 +41,9 @@ class translator(thread_controller):
         super(__class__, self).__init__("", True, parent)
 
     def start(self, lang_src, lang_trg):
+        if not (config.api_trans_akid and config.api_trans_aksecret and config.api_trans_appkey):
+            return False
+
         self.lang_src = lang_src
         self.lang_trg = lang_trg
 
@@ -52,7 +55,7 @@ class translator(thread_controller):
             config.api_trans_appkey
         )
 
-        super(__class__, self).start()
+        return super(__class__, self).start()
 
     def loop(self, data):
         if len(data) > config.API_TRANS_MAX_TEXT:
@@ -72,9 +75,8 @@ class translator(thread_controller):
         try:
             response = self.client.do_action_with_exception(request)
         except Exception as err:
-            print_err("""Exception from translation api:
-                        err:{}
-                        trace:{}""".format(err, traceback.format_exc()), self.error)
+            print_err(
+                f"Exception from translation api: err:{err} | trace:{traceback.format_exc()}", self.error)
         result = json.loads(response)
         if result["Code"] != "200":
             print_log("Translating text: " +

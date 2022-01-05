@@ -55,7 +55,7 @@ class recording(thread_controller):
         self.rate = rate
         self.depth = depth
 
-        super(__class__, self).start()
+        return super(__class__, self).start()
 
     def get_microphone_device(self):
         devices = list()

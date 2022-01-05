@@ -22,13 +22,15 @@ from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal
 
 import config
-from utils import log_code, print_log
+from utils import log_code
+from utils import print_log
 from utils import print_err
+from utils import error_reporting
 
 
 class thread_controller(QObject):
     result = pyqtSignal(object)
-    error = pyqtSignal(str)
+    error = pyqtSignal(error_reporting)
 
     def __init__(self, name="", has_queue=False, parent=None):
         super(__class__, self).__init__(parent)
@@ -52,6 +54,7 @@ class thread_controller(QObject):
         self.is_interrupt = False
 
         self.t.start()
+        return False
 
     def stop(self):
         self.is_interrupt = True

@@ -19,6 +19,7 @@
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QTabWidget
+from PyQt5.QtWidgets import QMessageBox
 
 import config
 from play_widget import play_widget
@@ -72,7 +73,20 @@ class mainwindow(QMainWindow):
         index = index_new
         # NOTE: little workaround here, cant get old index safely?
         if index != self.play_tab.tabid:
-            self.play_tab.tab_changed()
+            if not self.play_tab.is_recording():
+                return
+
+            result = QMessageBox.question(self,
+                                          QApplication.translate(
+                                              config.APP_I18N, "Close recording"),
+                                          QApplication.translate(
+                                              config.APP_I18N, "Want to close recording in order to change section?"),
+                                          QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            if result == QMessageBox.StandardButton.Yes:
+                self.play_tab.tab_changed()
+            else:
+                self.tabman.setCurrentIndex(self.play_tab.tabid)
+
         elif index != self.settings_tab.tabid:
             self.settings_tab.tab_changed()
 

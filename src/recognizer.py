@@ -58,23 +58,25 @@ class recognizer(thread_controller):
     def __init__(self, parent=None):
         super(__class__, self).__init__("recognizer", True, parent)
 
-    def start(self, akid, aksecret, appkey):
-        self.need_restart = False
-        self.count_restart = 0
+    def start(self):
+        if not (config.api_s2t_akid and config.api_s2t_aksecret and config.api_s2t_appkey):
+            return False
+
         self.api = nls.NlsSpeechTranscriber(
             url=NLS_URL,
-            akid=akid,
-            aksecret=aksecret,
-            appkey=appkey,
+            akid=config.api_s2t_akid,
+            aksecret=config.api_s2t_aksecret,
+            appkey=config.api_s2t_appkey,
             on_start=self.on_start,
             on_sentence_begin=self.on_sentence_begin,
             on_sentence_end=self.on_sentence_end,
             on_completed=self.on_completed,
+            on_result_changed=self.on_result_changed,
             on_error=self.on_error,
             on_close=self.on_close
         )
 
-        super(__class__, self).start()
+        return super(__class__, self).start()
 
     def on_start(self, message, *args):
         msg = json.loads(message)
@@ -101,7 +103,7 @@ class recognizer(thread_controller):
             self.need_restart = True
             print_err("NLS status restartable error")
         elif msg["header"]["status"] in NOT_RESTARTABLE_ERROR:
-            print_err("NLS status fatal error", self.error)
+            print_err("NLS status fatal error", self.error, critical=True)
         else:
             print_err("NLS status unknown error")
 
@@ -116,20 +118,19 @@ class recognizer(thread_controller):
             args, message))
         print_log("NLS status completed", log_code.INFO)
 
-    def running_restart(self):
-        self.api.shutdown()
-
-        if not self.api.start(aformat="pcm",
-                              enable_punctutation_prediction=True,
-                              enable_inverse_text_normalization=True):
-            print_err("Running restart cant start recognizer API", self.error)
-        self.need_restart = False
-        self.count_restart += 1
+    def on_result_changed(self, message, *args):
+        msg = json.loads(message)
+        print_log("on_result_changed:args=>{} message=>{}".format(
+            args, message))
+        print_log(
+            f"NLS result changed: {msg['payload']['result']}", log_code.INFO)
+        self.result.emit(msg["payload"]["result"])
 
     def run(self):
         print_log("Starting recognizer")
 
         if not self.api.start(aformat="pcm",
+                              enable_intermediate_result=config.intermediate_result,
                               enable_punctutation_prediction=True,
                               enable_inverse_text_normalization=True):
             print_err("Cant start recognizer API", self.error)
@@ -142,11 +143,6 @@ class recognizer(thread_controller):
         print_log("Closing recognizer")
 
     def loop(self, data):
-        if self.need_restart >= config.API_S2T_TRY_RESTART:
-            print_err("Max try to restart service reach", self.error)
-        if self.need_restart:
-            self.running_restart()
-
         slices = zip(*(iter(data),) * 640)
         for i in slices:
             if not self.api.send_audio(bytes(i)):

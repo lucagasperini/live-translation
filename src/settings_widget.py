@@ -58,6 +58,19 @@ class settings_widget(QWidget):
         self.sentence_limit_num.setMinimum(1)
         self.sentence_limit_num.setMaximum(1024)
 
+        self.sentence_ttl_label = QLabel(QApplication.translate(
+            config.APP_I18N, "Sentence time to live:"))
+        self.sentence_ttl_num = QDoubleSpinBox()
+        self.sentence_ttl_num.setDecimals(6)
+        self.sentence_ttl_num.setMinimum(0)
+        self.sentence_ttl_num.setMaximum(60)
+
+        self.sentence_max_label = QLabel(QApplication.translate(
+            config.APP_I18N, "Sentence max char:"))
+        self.sentence_max_num = QSpinBox()
+        self.sentence_max_num.setMinimum(0)
+        self.sentence_max_num.setMaximum(8192)
+
         self.rate_label = QLabel(QApplication.translate(
             config.APP_I18N, "Audio sample rate:"))
         self.rate_cbox = QComboBox()
@@ -82,12 +95,6 @@ class settings_widget(QWidget):
         self.port_num = QSpinBox()
         self.port_num.setMinimum(1024)
         self.port_num.setMaximum(65535)
-
-        self.refresh_label = QLabel(QApplication.translate(
-            config.APP_I18N, "Client refresh time:"))
-        self.refresh_num = QDoubleSpinBox()
-        self.refresh_num.setMinimum(0)
-        self.refresh_num.setMaximum(60)
 
         self.s2t_akid_label = QLabel(QApplication.translate(
             config.APP_I18N, "Speech to Text API akid:"))
@@ -122,8 +129,14 @@ class settings_widget(QWidget):
         layout.addWidget(self.device_label)
         layout.addWidget(self.device_cbox)
         layout.addWidget(self.test_btn)
+
         layout.addWidget(self.sentence_limit_label)
         layout.addWidget(self.sentence_limit_num)
+        layout.addWidget(self.sentence_ttl_label)
+        layout.addWidget(self.sentence_ttl_num)
+        layout.addWidget(self.sentence_max_label)
+        layout.addWidget(self.sentence_max_num)
+
         layout.addWidget(self.rate_label)
         layout.addWidget(self.rate_cbox)
         layout.addWidget(self.lang_src_label)
@@ -132,8 +145,6 @@ class settings_widget(QWidget):
         layout.addWidget(self.lang_trg_cbox)
         layout.addWidget(self.port_label)
         layout.addWidget(self.port_num)
-        layout.addWidget(self.refresh_label)
-        layout.addWidget(self.refresh_num)
 
         layout.addWidget(self.s2t_akid_label)
         layout.addWidget(self.s2t_akid_line)
@@ -158,6 +169,8 @@ class settings_widget(QWidget):
         self.init_device_list()
 
         self.sentence_limit_num.setValue(config.sentence_limit)
+        self.sentence_ttl_num.setValue(config.sentence_ttl)
+        self.sentence_max_num.setValue(config.sentence_max_chars)
         self.rate_cbox.setCurrentText(str(config.audio_rate))
         self.lang_src_cbox.setCurrentText(
             get_lang_by_code(config.lang_src))
@@ -168,7 +181,6 @@ class settings_widget(QWidget):
 
         self.lang_trg_cbox.selectedItems(tmp_lang_names)
         self.port_num.setValue(config.http_port)
-        self.refresh_num.setValue(config.http_refresh)
 
         if config.api_s2t_akid != "":
             self.s2t_akid_line.setText(config.WIDGET_PASSWORD_TEXT)
@@ -187,6 +199,10 @@ class settings_widget(QWidget):
         self.device_cbox.currentIndexChanged.connect(self.device_cbox_changed)
         self.sentence_limit_num.valueChanged.connect(
             self.sentence_limit_num_changed)
+        self.sentence_ttl_num.valueChanged.connect(
+            self.sentence_ttl_num_changed)
+        self.sentence_max_num.valueChanged.connect(
+            self.sentence_max_num_changed)
         self.rate_cbox.currentIndexChanged.connect(self.rate_cbox_changed)
         self.test_btn.clicked.connect(self.test_device)
         self.lang_src_cbox.currentIndexChanged.connect(
@@ -194,7 +210,6 @@ class settings_widget(QWidget):
         self.lang_trg_cbox.model().dataChanged.connect(
             self.lang_trg_cbox_changed)
         self.port_num.valueChanged.connect(self.port_num_changed)
-        self.refresh_num.valueChanged.connect(self.refresh_num_changed)
 
         self.s2t_akid_line.textChanged.connect(self.s2t_akid_line_changed)
         self.s2t_aksecret_line.textChanged.connect(
@@ -254,6 +269,12 @@ class settings_widget(QWidget):
     def sentence_limit_num_changed(self, value):
         config.sentence_limit = value
 
+    def sentence_ttl_num_changed(self, value):
+        config.sentence_ttl = value
+
+    def sentence_max_num_changed(self, value):
+        config.sentence_max_chars = value
+
     def rate_cbox_changed(self, value):
         current_rate = self.rate_cbox.itemText(value)
         if current_rate == "8000":
@@ -274,9 +295,6 @@ class settings_widget(QWidget):
 
     def port_num_changed(self, value):
         config.http_port = value
-
-    def refresh_num_changed(self, value):
-        config.http_refresh = value
 
     def s2t_akid_line_changed(self, value):
         config.api_s2t_akid = value

@@ -29,12 +29,15 @@ from PyQt5.QtWidgets import QTextEdit
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QLineEdit
 from PyQt5.QtWidgets import QHBoxLayout
-from PyQt5.QtGui import QClipboard, QGuiApplication
+from PyQt5.QtGui import QClipboard
+from PyQt5.QtGui import QGuiApplication
 
 import config
 from recording import recording
 from translator import translator
 from recognizer import recognizer
+from utils import log_code
+from utils import print_log
 from utils import show_critical_error
 from websocket import websocket
 
@@ -150,20 +153,24 @@ class play_widget(QWidget):
                                     device=config.audio_dev,
                                     rate=config.audio_rate,
                                     depth=config.audio_depth)
-        self.recognizer_worker.start(akid=config.api_s2t_akid,
-                                     aksecret=config.api_s2t_aksecret,
-                                     appkey=config.api_s2t_appkey)
+        # TODO: Check for start error and display it
+        self.recognizer_worker.start()
         self.translator_worker_list_start()
 
         if not self.websocket_worker.is_running():
-            self.websocket_worker.start(config.http_port, config.http_refresh)
+            self.websocket_worker.start(config.http_port, config.sentence_ttl)
 
-        self.html_file_line.setText(self.websocket_worker.html_file)
+        self.html_file_line.setText(
+            f"file:///{self.websocket_worker.html_file}?lang=")
 
         # self.html_page_timer.start(int(config.http_refresh * 1000))
 
         self.play_btn.setText(
             QApplication.translate(config.APP_I18N, "Stop recording"))
+
+    def is_recording(self):
+        # TODO: check all services
+        return self.recording_worker.is_running()
 
     def stop_recording(self):
         self.recording_worker.stop()
@@ -175,20 +182,36 @@ class play_widget(QWidget):
             config.APP_I18N, "Start recording"))
 
     def play_btn_clicked(self):
-        if not self.recording_worker.is_running():
+        if not self.is_recording():
+            print_log("User ask for start recording", log_code.INFO)
             self.start_recording()
         else:
+            print_log("User ask for stop recording", log_code.INFO)
             self.stop_recording()
 
     def html_copy_btn_clicked(self):
         if self.html_file_line.text():
-            abs_path = os.path.dirname(self.html_file_line.text())
-            QGuiApplication.clipboard().setText(abs_path)
+            QGuiApplication.clipboard().setText(self.html_file_line.text())
 
     def write_sentence(self, text):
         self.play_text.setText(text)
-        for worker in self.translator_worker_list:
-            worker.data_ready(text)
+
+        if config.sentence_max_chars <= 0:
+            for worker in self.translator_worker_list:
+                worker.data_ready(text)
+            return
+
+        data_size = len(text)
+        modulo = int(data_size % config.sentence_max_chars > 0)
+        chunks = data_size // config.sentence_max_chars
+
+        for i in range(0, chunks + modulo):
+            try:
+                data = text[(i * config.sentence_max_chars):(i+1)*config.sentence_max_chars]
+            except Exception:
+                data = text[i*config.sentence_max_chars:]
+            for worker in self.translator_worker_list:
+                worker.data_ready(data)
 
     def audio_recording(self, data):
         self.recognizer_worker.data_ready(data)
@@ -241,19 +264,35 @@ class play_widget(QWidget):
         self.play_trans.document().setPlainText(textbox_text)
 
     def recording_error(self, err):
-        self.stop_recording()
-        show_critical_error("Recording error",
-                            "Cannot use any recording device!")
+        if not err.critical:
+            self.recording_worker.stop()
+            self.recording_worker.join()
+            self.recording_worker.start(playback=False,
+                                        device=config.audio_dev,
+                                        rate=config.audio_rate,
+                                        depth=config.audio_depth)
+        else:
+            self.stop_recording()
+            err.show("Recording error")
 
     def recognizer_error(self, err):
-        self.stop_recording()
-        show_critical_error("Recognizer error",
-                            "Recognizer service report error!")
+        if not err.critical:
+            self.recognizer_worker.stop()
+            self.recognizer_worker.join()
+            self.recognizer_worker.start()
+        else:
+            self.stop_recording()
+            err.show("Recognizer error")
 
+    # TODO: this will restart all translator, can do only the one with error?
     def translator_error(self, err):
-        self.stop_recording()
-        show_critical_error("Translator error",
-                            "Translator service report error!")
+        if not err.critical:
+            self.translator_worker_list_stop()
+            self.translator_worker_list_join()
+            self.translator_worker_list_start()
+        else:
+            self.stop_recording()
+            err.show("Translator error")
 
     def websocket_error(self, err):
         self.stop_recording()

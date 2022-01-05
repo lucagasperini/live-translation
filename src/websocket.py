@@ -17,8 +17,10 @@
 
 
 import os
+import time
 import asyncio
 import threading
+from traceback import format_exc
 from queue import Queue
 
 import websockets
@@ -28,19 +30,20 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import QObject
 
 import config
-from utils import print_log
+from utils import log_code, print_log
 
 
 class websocket(QObject):
     error = pyqtSignal(str)
+    connected = set()
 
     def __init__(self, parent=None):
         super(__class__, self).__init__(parent)
         self.q = Queue(config.APP_QUEUE_MAX)
 
-    def start(self, port, refresh, html_file="", js_file=""):
+    def start(self, port, ttl, html_file=""):
         self.port = port
-        self.refresh = refresh
+        self.ttl = ttl
         if html_file == "":
             self.html_file = QDir.toNativeSeparators(
                 config.dir_appdata + "/" + config.APP_HTML_FILENAME)
@@ -68,6 +71,9 @@ class websocket(QObject):
             return False
 
     async def loop(self, websocket, path):
+        # Register.
+        self.connected.add(websocket)
+        print_log(f"New websocket client {websocket}", log_code.INFO)
         while True:
             try:
                 buffer = self.q.get(
@@ -76,29 +82,47 @@ class websocket(QObject):
                     self.lastdata = buffer
             except Exception as ex:
                 pass
+
             try:
-                await websocket.send(str(self.lastdata))
+                epoch, json = self.lastdata
+                waittime = (epoch + config.sentence_ttl) - time.time()
+            except Exception:
+                continue
+
+            try:
+                await websocket.send(json)
+                if waittime > 0:
+                    print_log(f"Websocket wait for {waittime} msg: {json}")
+                    await asyncio.sleep(waittime)
+                else:
+                    await asyncio.sleep(config.WEBSOCKET_SLEEP)
+
             except websockets.exceptions.ConnectionClosed:
-                pass
-            await asyncio.sleep(self.refresh)
+                print_log(
+                    f"Disconnected websocket client {websocket}", log_code.INFO)
+                websocket.close()
+                self.connected.remove(websocket)
+                break
 
     def data_ready(self, data):
-        self.q.put(data)
+        # NOTE: sending pair of current epoch time and json string
+        self.q.put((time.time(), data))
 
     async def run_forever(self):
         headers = websockets.Headers()
         headers["Content-type"] = "text/html; charset=utf-8"
-        async with websockets.serve(self.loop, "127.0.0.1", self.port, extra_headers=headers):
+        async with websockets.serve(self.loop, "127.0.0.1", self.port, extra_headers=headers, ping_interval=None):
             await asyncio.Future()
 
     def create_html_file(self):
         fd = open(self.html_file, "w")
-        fd.write(config.APP_HTML_FILE_CONTENT.format(str(self.port)))
+        fd.write(config.APP_HTML_FILE_CONTENT.format(
+            config.APP_DISPLAYNAME, str(self.port)))
         fd.close()
         print_log("Created html file in {}".format(self.html_file))
 
     def run(self):
-        if not os.path.exists(self.html_file):
+        if (not os.path.exists(self.html_file)) or config.html_file_override:
             self.create_html_file()
 
         print_log("Starting websocket server at " + str(self.port))
