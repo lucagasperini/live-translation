@@ -24,8 +24,13 @@ if __name__ == "__main__":
 
     pyinstaller = ""
     for path in sys.path:
-        tmp = path.removesuffix("\\site-packages")
-        tmp += "\\Scripts\\pyinstaller.exe"
+        pypath = path.removesuffix("\\site-packages")
+        tmp = pypath + "\\Scripts\\pyinstaller.exe"
+        if os.path.exists(tmp):
+            pyinstaller = tmp
+            break
+
+        tmp = pypath + "venv\\Scripts\\pyinstaller.exe"
         if os.path.exists(tmp):
             pyinstaller = tmp
             break
